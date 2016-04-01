@@ -4,10 +4,7 @@ original_marks = {'x','o','+'};
 figure, clf,
 hold on
 for i = 1:length(idx)
-    str = '';
-    str = strcat(str,colors{idx(i)});
-	str = strcat(str,original_marks{floor((ii(i)-1)/N)+1});
-    plot(X(i,1),X(i,2),str);
+    plot(X(i,1),X(i,2),strcat(colors{idx(i)},original_marks{floor((ii(i)-1)/N)+1}));
 end
 plot(centres(:,1),centres(:,2),'kx','MarkerSize',15,'LineWidth',5);
 title(text, 'FontSize', 20)

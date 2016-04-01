@@ -69,7 +69,7 @@
 
 function [W,H,iter,HIS]=nmf(A,k,varargin)
     [m,n] = size(A); ST_RULE = 1;
-
+    cost = @(A,W,H) sqrt(sum(sum((A-W*H).^2)));
     % Default configuration
     par.m = m;
     par.n = n;
@@ -149,7 +149,7 @@ function [W,H,iter,HIS]=nmf(A,k,varargin)
 %---(1)------(2)--------(3)--------(4)--------(5)---------(6)----------(7)------(8)-----(9)-------(10)--------------(11)-------
 % iter # | elapsed | totalTime | subIterW | subIterH | rel. obj.(%) | NM_GRAD | GRAD | DELTA | W density (%) | H density (%)
 %------------------------------------------------------------------------------------------------------------------------------
-        HIS = zeros(1,11);
+        HIS = zeros(1,12);
         HIS(1,[1:5])=0;
         ver.initGrNormW = initGrNormW;
         ver.initGrNormH = initGrNormH;
@@ -202,6 +202,7 @@ function [W,H,iter,HIS]=nmf(A,k,varargin)
             ver.SC3 = getStopCriterion(3,A,W,H,par.type,par.alpha,par.beta,gradW,gradH)/initSCs(3);     HIS(idx,9)=ver.SC3;
             ver.W_density = length(find(W>0))/(m*k);            HIS(idx,10)=ver.W_density;
             ver.H_density = length(find(H>0))/(n*k);            HIS(idx,11)=ver.H_density;
+            ver.cost = cost(A,W,H);                             HIS(idx,12)=ver.cost;
             if par.verbose == 2, display(ver);, end
             tPrev = cputime;
         end
