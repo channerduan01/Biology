@@ -40,12 +40,12 @@ else
 end
 if ~exist('argAlpha','var'), par.alpha = mean(A(:)); end
 if ~exist('argBeta','var'), par.beta = mean(A(:)); end
-if ~strcmp(par.method,'MU') && ~strcmp(par.method,'ALS') && ~strcmp(par.method,'CVX')
+if ~strcmp(par.method,'MU') && ~strcmp(par.method,'ALS') &&...
+        ~strcmp(par.method,'ALS_W') && ~strcmp(par.method,'CVX')
     error('Unrecognized method: use ''MU'' or ''ALS'' or ''CVX''.');
 end
-display(par);
-if par.verbose    
-end
+if par.verbose, display(par); end
+
 initSC = getInitCriterion(A,W,H,par.alpha,par.beta);
 SCconv = 0;
 SC_COUNT = 3;
@@ -61,19 +61,24 @@ for iter=1:par.max_iter
             H(H<0)=0;
             W = (pinv(H*H'+par.alpha*eye(k))*(H*A'))';
             W(W<0)=0;
+        case 'ALS_W'
+            H = pinv(W'*W+par.beta*eye(k))*(W'*A);
+            H(H<0)=0;
+            W = (pinv(H*H'+par.alpha*eye(k))*(H*A'))';
+            W(W<0)=0;           
         case 'CVX'
             cvx_begin quiet
             variable H(k,n)
-            minimize(norm(A - W*H,'fro')+norm(H));
+            minimize(norm(A - W*H,'fro')+norm(H,'fro'));
             subject to
             H >= 0
             cvx_end
             cvx_begin quiet
             variable W(m,k)
-            minimize(norm(A - W*H,'fro')+norm(W));
+            minimize(norm(A - W*H,'fro')+norm(W,'fro'));
             subject to
             W >= 0
-            cvx_end  
+            cvx_end
     end
     SC = getStopCriterion(A,W,H,par.alpha,par.beta)/initSC;
     ver.iter = iter;

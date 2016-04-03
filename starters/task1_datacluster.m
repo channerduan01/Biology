@@ -111,10 +111,9 @@ cost(A,W,H)
 norm(A-U*S*V)
 
 
-
-
-
-
+%% Consistensy Analysis
+% consistensyAnalysis(A,2:10,100,@mynmf)
+consistensyAnalysis(A,2:10,100,@(A,k) nmf(A,k,'type','sparse','nnls_solver','bp'))
 
 
 
