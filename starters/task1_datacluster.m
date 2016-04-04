@@ -5,7 +5,7 @@ close all
 clear
 clc
 
-scene = 2;
+scene = 1;
 switch scene
     case 1 % this case cannot be separate by NMF, but easy for k-means
         m1=[4;4];
@@ -86,24 +86,24 @@ disp(['k-means cost:',num2str(cost(A,W,H))]);
 drawClusters(idx,centres,X,N,ii,'K-means')
 
 %% MU
-[W,H,~] = mynmf(A,k,'verbose',1);
+[W,H,~] = mynmf(A,k,'verbose',0);
 [~,idx] = max(H);
 drawClusters(idx',W',X,N,ii,'MU')
 cost(A,W,H)
 %% ALS
-[W,H,~] = mynmf(A,k,'METHOD','ALS','verbose',1);
+[W,H,~] = mynmf(A,k,'METHOD','ALS','verbose',0);
 [~,idx] = max(H);
 drawClusters(idx',W',X,N,ii,'ALS')
 cost(A,W,H)
 %% CVX
-[W,H,~] = mynmf(A,k,'METHOD','CVX','verbose',1,'MAX_ITER',20);
-[~,idx] = max(H);
-drawClusters(idx',W',X,N,ii,'CVX')
-cost(A,W,H)
-%% ANLS
+% [W,H,~] = mynmf(A,k,'METHOD','CVX','verbose',1,'MAX_ITER',20);
+% [~,idx] = max(H);
+% drawClusters(idx',W',X,N,ii,'CVX')
+% cost(A,W,H)
+%% SNMF
 [W,H,iter,HIS] = nmf(A,k,'type','sparse','nnls_solver','bp');
 [~,idx] = max(H);
-drawClusters(idx',W',X,N,ii,'ANLS')
+drawClusters(idx',W',X,N,ii,'SNMF')
 cost(A,W,H)
 
 %% SVD ,,, confusing part~
@@ -112,8 +112,10 @@ norm(A-U*S*V)
 
 
 %% Consistensy Analysis
-% consistensyAnalysis(A,2:10,100,@mynmf)
-consistensyAnalysis(A,2:10,100,@(A,k) nmf(A,k,'type','sparse','nnls_solver','bp'))
+% consistensyAnalysis(A,2:2,100,@wrapKmeanAsNmf)
+% consistensyAnalysis(A,2:2,100,@mynmf)
+% consistensyAnalysis(A,2:2,100,@(A,k) mynmf(A,k,'METHOD','ALS','MAX_ITER',100))
+% consistensyAnalysis(A,2:2,100,@(A,k) nmf(A,k,'type','sparse','nnls_solver','bp'))
 
 
 

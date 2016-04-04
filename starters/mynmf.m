@@ -63,7 +63,6 @@ for iter=1:par.max_iter
             W(W<0)=0;
         case 'ALS_W'
             H = pinv(W'*W+par.beta*eye(k))*(W'*A);
-            H(H<0)=0;
             W = (pinv(H*H'+par.alpha*eye(k))*(H*A'))';
             W(W<0)=0;           
         case 'CVX'

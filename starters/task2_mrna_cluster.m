@@ -20,7 +20,7 @@ max_ = max(max(A));
 A = (A-min_)/(max_-min_);
 % figure(1), clf, imagesc([mrna zeros(N,1) A'*(max_-min_)+min_])
 
-k = 9;
+k = 6;
 cost = @(A,W,H) sqrt(sum(sum((A-W*H).^2)));
 
 %% k-means
@@ -35,6 +35,7 @@ end
 disp(['k-means cost:',num2str(cost(A,W,H))]);
 drawGeneTimesequence(A',idx,k);
 drawCheckDataDistribution(A',idx,'K-means');
+cost(A,W,H)
 %% MU
 [W,H] = mynmf(A,k,'verbose',1,'MAX_ITER',100);
 [~,idx] = max(H);
@@ -47,31 +48,37 @@ drawGeneTimesequence(A',idx,k);
 cost(A,W,H)
 % drawGeneTimesequence(A',idx,k);
 drawCheckDataDistribution(A',idx,'ALS');
-%% ANLS
+%% SNMF
 [W,H] = nmf(A,k,'type','sparse','nnls_solver','bp','verbose',1);
 [~,idx] = max(H);
 cost(A,W,H)
 % drawGeneTimesequence(A',idx,k);
-drawCheckDataDistribution(A',idx,'ANLS');
-
+drawCheckDataDistribution(A',idx,'SNMF');
+%% SVD ,,, confusing part~
+[U,S,V] = svd(A);
+norm(A-U*S*V,'fro')
 %% Consistency Analysis
-repeatTime = 2;
-K = 10:13;
-P = zeros(3,length(K));
-P(1,:) = consistensyAnalysis(A,K,repeatTime,@wrapKmeanAsNmf);
-P(2,:) = consistensyAnalysis(A,K,repeatTime,@(A,k) nmf(A,k,'type','sparse','MAX_ITER',100));
-P(3,:) = consistensyAnalysis(A,K,repeatTime,@(A,k) mynmf(A,k,'METHOD','MU','MAX_ITER',100));
-P(4,:) = consistensyAnalysis(A,K,repeatTime,@(A,k) mynmf(A,k,'METHOD','ALS','MAX_ITER',100));
+tic;
+repeatTime = 100;
+K = 2:100;
+P = zeros(5,length(K));
+% P(1,:) = consistensyAnalysis(A,K,repeatTime,@wrapKmeanAsNmf);
+% P(2,:) = consistensyAnalysis(A,K,repeatTime,@(A,k) nmf(A,k,'type','sparse','MAX_ITER',100));
+% P(3,:) = consistensyAnalysis(A,K,repeatTime,@(A,k) mynmf(A,k,'METHOD','MU','MAX_ITER',100));
+% P(4,:) = consistensyAnalysis(A,K,repeatTime,@(A,k) mynmf(A,k,'METHOD','ALS','MAX_ITER',100));
 P(5,:) = consistensyAnalysis(A,K,repeatTime,@(A,k) mynmf(A,k,'METHOD','ALS_W','MAX_ITER',100));
+toc;
 
+%%
 % Draw figures of consistency
 figure,clf
-plot(K,P');
+P = P_2_100_MRNA;
+plot(2:100,P');
 title('Consistency', 'FontSize', 20)
 xlabel('k', 'FontSize', 20);
 ylabel('p', 'FontSize', 20);
 set(gca,'FontSize',16);
-legend('K-means', 'Sparse', 'MU', 'ALS', 'ALS-W');
+legend('K-means', 'SNMF', 'MU', 'ALS', 'ALS-W');
 
 
 
