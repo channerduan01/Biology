@@ -71,7 +71,7 @@ ii = randperm(length(data));
 X = data(ii,:);
 A = X';
 
-cost = @(A,W,H) sqrt(sum(sum((A-W*H).^2)));
+cost = @(A,W,H) norm(A-W*H,'fro');
 
 %% k-means
 repeat = 1;
@@ -106,16 +106,34 @@ cost(A,W,H)
 drawClusters(idx',W',X,N,ii,'SNMF')
 cost(A,W,H)
 
-%% SVD ,,, confusing part~
+%% SVD ,,, cool!
+A = randn(1000,1000);
 [U,S,V] = svd(A);
-norm(A-U*S*V)
+norm(A-U*S*V','fro')
+for i = 1000:-1:50
+    S(i,:) = 0;
+    if mod(i,20) == 0
+        norm(U*S*V'-A,'fro')
+        rank(U*S*V')
+    end
+end
+for i = 50:-1:1
+    S(i,:) = 0;
+    norm(U*S*V'-A,'fro')
+    rank(U*S*V')
+end
 
+%%
+[U,S,V] = svd(A);
+S(:,3:400)=0;
+% V(:,3:400)=0;
+norm(A-U*S*V','fro')
 
 %% Consistensy Analysis
 % consistensyAnalysis(A,2:2,100,@wrapKmeanAsNmf)
-% consistensyAnalysis(A,2:2,100,@mynmf)
-% consistensyAnalysis(A,2:2,100,@(A,k) mynmf(A,k,'METHOD','ALS','MAX_ITER',100))
-% consistensyAnalysis(A,2:2,100,@(A,k) nmf(A,k,'type','sparse','nnls_solver','bp'))
+consistensyAnalysis(A,2:2,100,@mynmf)
+consistensyAnalysis(A,2:2,100,@(A,k) mynmf(A,k,'METHOD','ALS','MAX_ITER',100))
+% consistensyAnalysis(A,2:2,100,@(A,k) nmf(A,k,'type','sparse','nnls_solver','bp','BETA',0))
 
 
 

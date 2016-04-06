@@ -1,4 +1,4 @@
-% Task 1, compare k-means and matrix approximate.
+% Task 2
 %
 % init data
 close all
@@ -12,16 +12,16 @@ protein = P1(:,2:7);
 conca = [mrna,protein];
 N = size(mrna,1);
 
-A = mrna';
-% A = conca';
+% A = mrna';
+A = conca';
 
 min_ = min(min(A));
 max_ = max(max(A));
 A = (A-min_)/(max_-min_);
 % figure(1), clf, imagesc([mrna zeros(N,1) A'*(max_-min_)+min_])
 
-k = 6;
-cost = @(A,W,H) sqrt(sum(sum((A-W*H).^2)));
+k = 2;
+cost = @(A,W,H) norm(A-W*H,'fro');
 
 %% k-means
 repeat = 1;
@@ -37,17 +37,23 @@ drawGeneTimesequence(A',idx,k);
 drawCheckDataDistribution(A',idx,'K-means');
 cost(A,W,H)
 %% MU
-[W,H] = mynmf(A,k,'verbose',1,'MAX_ITER',100);
-[~,idx] = max(H);
-cost(A,W,H)
-drawGeneTimesequence(A',idx,k);
-% drawCheckDataDistribution(A',idx,'MU');
-%% ALS
-[W,H] = mynmf(A,k,'METHOD','ALS','verbose',1);
+[W,H] = mynmf(A,k,'verbose',0,'MAX_ITER',100);
 [~,idx] = max(H);
 cost(A,W,H)
 % drawGeneTimesequence(A',idx,k);
+drawCheckDataDistribution(A',idx,'MU');
+%% ALS
+[W,H] = mynmf(A,k,'METHOD','ALS','verbose',0);
+[~,idx] = max(H);
+cost(A,W,H)
+drawGeneTimesequence(A',idx,k);
 drawCheckDataDistribution(A',idx,'ALS');
+%% ALS-W
+[W,H] = mynmf(A,k,'METHOD','ALS_W','verbose',0);
+[~,idx] = max(H);
+cost(A,W,H)
+drawGeneTimesequence(A',idx,k);
+drawCheckDataDistribution(A',idx,'ALS-W');
 %% SNMF
 [W,H] = nmf(A,k,'type','sparse','nnls_solver','bp','verbose',1);
 [~,idx] = max(H);
@@ -56,29 +62,32 @@ cost(A,W,H)
 drawCheckDataDistribution(A',idx,'SNMF');
 %% SVD ,,, confusing part~
 [U,S,V] = svd(A);
-norm(A-U*S*V,'fro')
+S(k+1:size(S,1),:) = 0;
+norm(A-U*S*V','fro')
+
+
 %% Consistency Analysis
-tic;
+% tic;
 repeatTime = 100;
-K = 2:100;
+K = 2:5;
 P = zeros(5,length(K));
-% P(1,:) = consistensyAnalysis(A,K,repeatTime,@wrapKmeanAsNmf);
+P(1,:) = consistensyAnalysis(A,K,repeatTime,@wrapKmeanAsNmf)
 % P(2,:) = consistensyAnalysis(A,K,repeatTime,@(A,k) nmf(A,k,'type','sparse','MAX_ITER',100));
 % P(3,:) = consistensyAnalysis(A,K,repeatTime,@(A,k) mynmf(A,k,'METHOD','MU','MAX_ITER',100));
 % P(4,:) = consistensyAnalysis(A,K,repeatTime,@(A,k) mynmf(A,k,'METHOD','ALS','MAX_ITER',100));
-P(5,:) = consistensyAnalysis(A,K,repeatTime,@(A,k) mynmf(A,k,'METHOD','ALS_W','MAX_ITER',100));
-toc;
+% P(5,:) = consistensyAnalysis(A,K,repeatTime,@(A,k) mynmf(A,k,'METHOD','ALS_W','MAX_ITER',100));
+% toc;
 
 %%
 % Draw figures of consistency
-figure,clf
-P = P_2_100_MRNA;
-plot(2:100,P');
-title('Consistency', 'FontSize', 20)
-xlabel('k', 'FontSize', 20);
-ylabel('p', 'FontSize', 20);
-set(gca,'FontSize',16);
-legend('K-means', 'SNMF', 'MU', 'ALS', 'ALS-W');
+% figure,clf
+% P = P_2_100_MRNA;
+% plot(2:100,P');
+% title('Consistency', 'FontSize', 20)
+% xlabel('k', 'FontSize', 20);
+% ylabel('p', 'FontSize', 20);
+% set(gca,'FontSize',16);
+% legend('K-means', 'SNMF', 'MU', 'ALS', 'ALS-W');
 
 
 
