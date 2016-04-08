@@ -5,7 +5,7 @@ close all
 clear
 clc
 
-scene = 1;
+scene = 2;
 switch scene
     case 1 % this case cannot be separate by NMF, but easy for k-means
         m1=[4;4];
@@ -72,6 +72,8 @@ X = data(ii,:);
 A = X';
 
 cost = @(A,W,H) norm(A-W*H,'fro');
+sparsity = @(L1,L2,dim) (sqrt(dim)-L1/sqrt(L2))/(sqrt(dim)-1);
+
 
 %% k-means
 repeat = 1;
@@ -86,12 +88,12 @@ disp(['k-means cost:',num2str(cost(A,W,H))]);
 drawClusters(idx,centres,X,N,ii,'K-means')
 
 %% MU
-[W,H,~] = mynmf(A,k,'verbose',0);
+[W,H,~] = mynmf(A,k,'verbose',1,'ALPHA',1,'BETA',0,'W_INIT',eye(2),'H_INIT',A);
 [~,idx] = max(H);
 drawClusters(idx',W',X,N,ii,'MU')
 cost(A,W,H)
 %% ALS
-[W,H,~] = mynmf(A,k,'METHOD','ALS','verbose',0);
+[W,H,~] = mynmf(A,k,'METHOD','MU','verbose',1,'ALPHA',0,'BETA',0,'W_INIT',eye(2),'H_INIT',A);
 [~,idx] = max(H);
 drawClusters(idx',W',X,N,ii,'ALS')
 cost(A,W,H)
@@ -101,9 +103,16 @@ cost(A,W,H)
 % drawClusters(idx',W',X,N,ii,'CVX')
 % cost(A,W,H)
 %% SNMF
-[W,H,iter,HIS] = nmf(A,k,'type','sparse','nnls_solver','bp');
+[W,H,iter,HIS] = nmf(A,k,'type','sparse','nnls_solver','bp','verbose',2);
 [~,idx] = max(H);
+disp([norm(W,'fro'),norm(H,'fro')]);
 drawClusters(idx',W',X,N,ii,'SNMF')
+cost(A,W,H)
+
+%% NMFSC
+[W,H,~] = mynmf(A,k,'METHOD','NMFSC','verbose',1,'ALPHA',1,'BETA',1,'RATE',0.5);
+[~,idx] = max(H);
+drawClusters(idx',W',X,N,ii,'NMFSC')
 cost(A,W,H)
 
 %% SVD ,,, cool!
@@ -125,9 +134,9 @@ end
 
 %%
 [U,S,V] = svd(A);
-S(:,3:400)=0;
+% S(:,3:400)=0;
 % V(:,3:400)=0;
-norm(A-U*S*V','fro')
+% norm(A-U*S*V','fro')
 
 %% Consistensy Analysis
 % consistensyAnalysis(A,2:2,100,@wrapKmeanAsNmf)
@@ -136,7 +145,13 @@ consistensyAnalysis(A,2:2,100,@(A,k) mynmf(A,k,'METHOD','ALS','MAX_ITER',100))
 % consistensyAnalysis(A,2:2,100,@(A,k) nmf(A,k,'type','sparse','nnls_solver','bp','BETA',0))
 
 
+%% Sparsity test
+L1 = 1;
+L2 = 0.6;
+sparsity(L1,L2,2)
 
+% projection_operator(H(:,1),L1,L2)
+% profile viewer
 
 
 

@@ -12,15 +12,15 @@ protein = P1(:,2:7);
 conca = [mrna,protein];
 N = size(mrna,1);
 
-% A = mrna';
-A = conca';
+A = mrna';
+% A = conca';
 
 min_ = min(min(A));
 max_ = max(max(A));
 A = (A-min_)/(max_-min_);
 % figure(1), clf, imagesc([mrna zeros(N,1) A'*(max_-min_)+min_])
 
-k = 2;
+k = 5;
 cost = @(A,W,H) norm(A-W*H,'fro');
 
 %% k-means
@@ -60,6 +60,13 @@ drawCheckDataDistribution(A',idx,'ALS-W');
 cost(A,W,H)
 % drawGeneTimesequence(A',idx,k);
 drawCheckDataDistribution(A',idx,'SNMF');
+%% NMFSC
+[W,H,~] = mynmf(A,k,'METHOD','NMFSC','verbose',1,'ALPHA',1,'BETA',1,'RATE',10,'MAX_ITER',50);
+[~,idx] = max(H);
+cost(A,W,H)
+% drawGeneTimesequence(A',idx,k);
+drawCheckDataDistribution(A',idx,'NMFSC');
+
 %% SVD ,,, confusing part~
 [U,S,V] = svd(A);
 S(k+1:size(S,1),:) = 0;
@@ -90,5 +97,6 @@ P(1,:) = consistensyAnalysis(A,K,repeatTime,@wrapKmeanAsNmf)
 % legend('K-means', 'SNMF', 'MU', 'ALS', 'ALS-W');
 
 
-
+%%
+mynmf(A,k,'METHOD','NMFSC','verbose',1,'ALPHA',1,'BETA',1,'RATE',10,'MAX_ITER',3,'MIN_ITER',1)
 

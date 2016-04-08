@@ -4,7 +4,7 @@
 %
 % For 'ALS'
 % Basic ALS(Paatero and Tapper, 1994)
-function [W,H,iter,HIS]=mynmf(A,k,varargin)
+function [W,H,iter,HIS] = mynmf(A,k,varargin)
 cost = @(A,W,H) sqrt(sum(sum((A-W*H).^2)));
 
 [m,n] = size(A);
@@ -29,6 +29,9 @@ else
             case 'METHOD',              par.method = varargin{i+1};
             case 'ALPHA',               argAlpha = varargin{i+1};par.alpha = argAlpha;
             case 'BETA',                argBeta = varargin{i+1};par.beta = argBeta;
+            case 'RATE',                par.rate = varargin{i+1};
+            case 'W_INIT',              W = varargin{i+1};
+            case 'H_INIT',              H = varargin{i+1};
             case 'MAX_ITER',            par.max_iter = varargin{i+1};
             case 'MIN_ITER',            par.min_iter = varargin{i+1};
             case 'TOL',                 par.tol = varargin{i+1};
@@ -38,15 +41,26 @@ else
         end
     end
 end
+if ~strcmp(par.method,'MU') && ~strcmp(par.method,'ALS') &&...
+        ~strcmp(par.method,'ALS_W') && ~strcmp(par.method,'NMFSC')
+    error('Unrecognized method: use ''MU'' or ''ALS'' or ''NMFSC''.');
+end
+
 if ~exist('argAlpha','var'), par.alpha = mean(A(:)); end
 if ~exist('argBeta','var'), par.beta = mean(A(:)); end
-if ~strcmp(par.method,'MU') && ~strcmp(par.method,'ALS') &&...
-        ~strcmp(par.method,'ALS_W') && ~strcmp(par.method,'CVX')
-    error('Unrecognized method: use ''MU'' or ''ALS'' or ''CVX''.');
-end
+
+par.start_cost = cost(A,W,H);
 if par.verbose, display(par); end
 
 initSC = getInitCriterion(A,W,H,par.alpha,par.beta);
+
+% special operation for NMFSC
+if strcmp(par.method,'NMFSC')
+    for i = 1:length(H)
+        H(:,i) = projection_operator(H(:,i),par.alpha,par.beta);
+    end
+end
+
 SCconv = 0;
 SC_COUNT = 3;
 HIS = zeros(1,4);
@@ -58,26 +72,20 @@ for iter=1:par.max_iter
             W = W .* (A*H')./(W*H*H' + par.alpha*W + eps);
         case 'ALS'
             H = pinv(W'*W+par.beta*eye(k))*(W'*A);
-            H(H<0)=0;
+            H(H<0) = 0;
             W = (pinv(H*H'+par.alpha*eye(k))*(H*A'))';
-            W(W<0)=0;
+            W(W<0) = 0;
         case 'ALS_W'
             H = pinv(W'*W+par.beta*eye(k))*(W'*A);
             W = (pinv(H*H'+par.alpha*eye(k))*(H*A'))';
-            W(W<0)=0;           
-        case 'CVX'
-            cvx_begin quiet
-            variable H(k,n)
-            minimize(norm(A - W*H,'fro')+norm(H,'fro'));
-            subject to
-            H >= 0
-            cvx_end
-            cvx_begin quiet
-            variable W(m,k)
-            minimize(norm(A - W*H,'fro')+norm(W,'fro'));
-            subject to
-            W >= 0
-            cvx_end
+            W(W<0) = 0;
+        case 'NMFSC'
+            % special step for sparsity matrix, a small rate is important
+            H = H - par.rate*W'*(W*H-A);
+            for i = 1:length(H)
+                H(:,i) = projection_operator(H(:,i),par.alpha,par.beta);
+            end
+            W = W .* (A*H')./(W*H*H' + eps);
     end
     SC = getStopCriterion(A,W,H,par.alpha,par.beta)/initSC;
     ver.iter = iter;
