@@ -25,19 +25,20 @@ end
 subplot(122), imagesc([mrna(ii,:) zeros(N,1) protein(ii,:)]);
 colorbar('vert');
 drawnow
-
+%%
 figure(2), clf,
 bar(xx);
 title('Correlations: mRNA and Protein', 'FontSize', 16);
 grid on
-
+%%
 figure(3), clf,
 plot(1:6,mrna(ii(1),:),'r', 1:6,protein(ii(1),:),'r-.',...
      1:6,mrna(ii(N),:),'b', 1:6,protein(ii(N),:),'b-.',...
+     1:6,mrna(ii(N/2),:),'g', 1:6,protein(ii(N/2),:),'g-.',...
      'LineWidth',2);
 grid on
 title('Least (red) and Most (blue) Correlated Profiles', 'Fontsize', 16);
-
+%%
 l75 = length(find(c>0.75));
 
 figure(1), clf,

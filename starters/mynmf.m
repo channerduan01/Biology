@@ -81,7 +81,8 @@ for iter=1:par.max_iter
             W(W<0) = 0;
         case 'NMFSC'
             % special step for sparsity matrix, a small rate is important
-            H = H - par.rate*W'*(W*H-A);
+%             H = H - par.rate*W'*(W*H-A); % every iteration just descend
+            H = pinv(W'*W+0*eye(k))*(W'*A); % every iteration get best solution
             for i = 1:length(H)
                 H(:,i) = projection_operator(H(:,i),par.alpha,par.beta);
             end

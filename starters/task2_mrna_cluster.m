@@ -20,7 +20,7 @@ max_ = max(max(A));
 A = (A-min_)/(max_-min_);
 % figure(1), clf, imagesc([mrna zeros(N,1) A'*(max_-min_)+min_])
 
-k = 5;
+k = 10;
 cost = @(A,W,H) norm(A-W*H,'fro');
 
 %% k-means
@@ -33,9 +33,9 @@ for i = 1:length(idx)
     H(idx(i),i) = 1;
 end
 disp(['k-means cost:',num2str(cost(A,W,H))]);
-drawGeneTimesequence(A',idx,k);
-drawCheckDataDistribution(A',idx,'K-means');
-cost(A,W,H)
+% drawGeneTimesequence(A',idx,k);
+% drawCheckDataDistribution(A',idx,'K-means');
+% cost(A,W,H)
 %% MU
 [W,H] = mynmf(A,k,'verbose',0,'MAX_ITER',100);
 [~,idx] = max(H);
@@ -43,10 +43,10 @@ cost(A,W,H)
 % drawGeneTimesequence(A',idx,k);
 drawCheckDataDistribution(A',idx,'MU');
 %% ALS
-[W,H] = mynmf(A,k,'METHOD','ALS','verbose',0);
+[W,H] = mynmf(A,k,'METHOD','ALS','verbose',0,'ALPHA',1,'BETA',10);
 [~,idx] = max(H);
 cost(A,W,H)
-drawGeneTimesequence(A',idx,k);
+% drawGeneTimesequence(A',idx,k);
 drawCheckDataDistribution(A',idx,'ALS');
 %% ALS-W
 [W,H] = mynmf(A,k,'METHOD','ALS_W','verbose',0);
@@ -61,7 +61,7 @@ cost(A,W,H)
 % drawGeneTimesequence(A',idx,k);
 drawCheckDataDistribution(A',idx,'SNMF');
 %% NMFSC
-[W,H,~] = mynmf(A,k,'METHOD','NMFSC','verbose',1,'ALPHA',1,'BETA',1,'RATE',10,'MAX_ITER',50);
+[W,H,~] = mynmf(A,k,'METHOD','NMFSC','verbose',1,'ALPHA',1,'BETA',1,'RATE',10,'MAX_ITER',5);
 [~,idx] = max(H);
 cost(A,W,H)
 % drawGeneTimesequence(A',idx,k);
@@ -74,16 +74,17 @@ norm(A-U*S*V','fro')
 
 
 %% Consistency Analysis
-% tic;
-repeatTime = 100;
-K = 2:5;
-P = zeros(5,length(K));
-P(1,:) = consistensyAnalysis(A,K,repeatTime,@wrapKmeanAsNmf)
+tic;
+repeatTime = 2;
+K = 5:5;
+P = zeros(6,length(K));
+P(1,:) = consistensyAnalysis(A,K,repeatTime,@wrapKmeanAsNmf);
 % P(2,:) = consistensyAnalysis(A,K,repeatTime,@(A,k) nmf(A,k,'type','sparse','MAX_ITER',100));
 % P(3,:) = consistensyAnalysis(A,K,repeatTime,@(A,k) mynmf(A,k,'METHOD','MU','MAX_ITER',100));
-% P(4,:) = consistensyAnalysis(A,K,repeatTime,@(A,k) mynmf(A,k,'METHOD','ALS','MAX_ITER',100));
+% P(4,:) = consistensyAnalysis(A,K,repeatTime,@(A,k) mynmf(A,k,'METHOD','ALS','MAX_ITER',100,'ALPHA',0,'BETA',10));
 % P(5,:) = consistensyAnalysis(A,K,repeatTime,@(A,k) mynmf(A,k,'METHOD','ALS_W','MAX_ITER',100));
-% toc;
+% P(6,:) = consistensyAnalysis(A,K,repeatTime,@(A,k) mynmf(A,k,'METHOD','NMFSC','ALPHA',1,'BETA',1,'RATE',0.5,'MAX_ITER',20));
+toc;
 
 %%
 % Draw figures of consistency

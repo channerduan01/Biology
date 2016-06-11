@@ -88,14 +88,14 @@ disp(['k-means cost:',num2str(cost(A,W,H))]);
 drawClusters(idx,centres,X,N,ii,'K-means')
 
 %% MU
-[W,H,~] = mynmf(A,k,'verbose',1,'ALPHA',1,'BETA',0,'W_INIT',eye(2),'H_INIT',A);
+[W,H,~] = mynmf(A,k,'verbose',0,'ALPHA',0,'BETA',0,'W_INIT',eye(2),'H_INIT',A);
 [~,idx] = max(H);
-drawClusters(idx',W',X,N,ii,'MU')
+% drawClusters(idx',W',X,N,ii,'MU')
 cost(A,W,H)
 %% ALS
-[W,H,~] = mynmf(A,k,'METHOD','MU','verbose',1,'ALPHA',0,'BETA',0,'W_INIT',eye(2),'H_INIT',A);
+[W,H,~] = mynmf(A,k,'METHOD','MU','verbose',0,'ALPHA',0,'BETA',10,'W_INIT',eye(2),'H_INIT',A);
 [~,idx] = max(H);
-drawClusters(idx',W',X,N,ii,'ALS')
+% drawClusters(idx',W',X,N,ii,'ALS')
 cost(A,W,H)
 %% CVX
 % [W,H,~] = mynmf(A,k,'METHOD','CVX','verbose',1,'MAX_ITER',20);
@@ -103,19 +103,20 @@ cost(A,W,H)
 % drawClusters(idx',W',X,N,ii,'CVX')
 % cost(A,W,H)
 %% SNMF
-[W,H,iter,HIS] = nmf(A,k,'type','sparse','nnls_solver','bp','verbose',2);
+[W,H,iter,HIS] = nmf(A,k,'type','sparse','nnls_solver','bp','verbose',0);
 [~,idx] = max(H);
 disp([norm(W,'fro'),norm(H,'fro')]);
 drawClusters(idx',W',X,N,ii,'SNMF')
 cost(A,W,H)
 
 %% NMFSC
-[W,H,~] = mynmf(A,k,'METHOD','NMFSC','verbose',1,'ALPHA',1,'BETA',1,'RATE',0.5);
+[W,H,~] = mynmf(A,k,'METHOD','NMFSC','verbose',1,'ALPHA',1,'BETA',1,'RATE',0.5, 'MAX_ITER',3);
 [~,idx] = max(H);
 drawClusters(idx',W',X,N,ii,'NMFSC')
 cost(A,W,H)
 
 %% SVD ,,, cool!
+%% information is reducing quicker and quicker while giving energy up
 A = randn(1000,1000);
 [U,S,V] = svd(A);
 norm(A-U*S*V','fro')
@@ -136,7 +137,7 @@ end
 [U,S,V] = svd(A);
 % S(:,3:400)=0;
 % V(:,3:400)=0;
-% norm(A-U*S*V','fro')
+norm(A-U*S*V','fro')
 
 %% Consistensy Analysis
 % consistensyAnalysis(A,2:2,100,@wrapKmeanAsNmf)
