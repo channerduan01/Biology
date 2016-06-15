@@ -1,19 +1,11 @@
-% Roger EM coupled clustering model
+%% Roger EM coupled clustering model
 %
 % init data
 close all
 clear
 clc
 
-cost = @(V,W,H) norm(V-W*H,'fro');
-
-load hmec;
-MRNA = data{1};
-P1 = data{2}; 
-MRNA = normalize(MRNA)';
-PROTEIN = normalize(P1(:,2:7))';
-PROTEIN_ORIGINAL = normalize(P1)';
-[T,N] = size(MRNA);
+[MRNA, PROTEIN, PROTEIN_ORIGINAL, T, N, names] = GeneDataLoad();
 K = 15;
 J = 19;
 
@@ -35,14 +27,27 @@ J = 19;
 
 %% Roger's Model
 MAX_ITER = 100;
-patience = 2;
+patience = 1;
 REPEAPT = 1;
 RESULT = cell(REPEAPT,1);
-for i = 1:REPEAPT
+i = 0;
+error_result_num = 0;
+while true
+    % -------- permuted Proteins
+    ii = randperm(N);
+    PROTEIN(:,1:N) = PROTEIN(:,ii);
+    % --------
+    i = i + 1;
+    if i > REPEAPT, break;end
     [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = ...
         MyCoupleClustering(MRNA, PROTEIN, K, J, MAX_ITER, patience, true);
     [THETA_reverse, entropy_j_k, entropy_k_j] = BasicCoupleClusteringAnalysis(K, J, PI_K, THETA);
     low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N);
+    if isnan(low_bound) || low_bound == -Inf || low_bound == Inf
+        error_result_num = error_result_num + 1;
+        i = i - 1;
+        continue;
+    end
     R_J = mean(R,3);
     RESULT{i} = struct('low_bound',low_bound,'entropy_j_k',entropy_j_k,'entropy_k_j',entropy_k_j, ...
         'THETA_reverse',THETA_reverse,'Q',Q,'R',R,'R_J',R_J,'PI_K',PI_K,'AVG_K',AVG_K, ...
@@ -66,15 +71,11 @@ if REPEAPT > 1
     fprintf('mrna consistency: %f, protein consistency: %f\n', mrna_consistency, protein_consistency);
 end
 %% Single Analysis
-SELETION_THRESHOLD = 0.4;
+SELETION_THRESHOLD = 0.3;
 [mrna_clusters, protein_clusters] = CalcuClusterExtent(K, J, N, Q, R_J, SELETION_THRESHOLD);
 OutputClustersNM(K, J, mrna_clusters, protein_clusters, names);
-ANALYSIS_PROTEIN_CLUSTER_IDX = 12;
+ANALYSIS_PROTEIN_CLUSTER_IDX = 7;
 ClusterAnalysis(ANALYSIS_PROTEIN_CLUSTER_IDX, Q, protein_clusters, MRNA, PROTEIN);
-
-    
-    
-    
-    
+ 
 
 

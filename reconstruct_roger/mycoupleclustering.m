@@ -2,43 +2,42 @@ function [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = ...
     MyCoupleClustering(MRNA, PROTEIN, K, J, MAX_ITER, patience, b_verbose)
     [T,N] = size(MRNA);
     % init parameters
-    Q = rand(K, N);
-    R = rand(J, N, K);
-    for i = 1:N
-        Q(:,i) = Q(:,i)/sum(Q(:,i));
-    end
-    for i = 1:K
-        for j = 1:N
-            R(:,j,i) = R(:,j,i)/sum(R(:,j,i));
-        end
-    end
-    [PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = Maximum(Q,R,MRNA,PROTEIN,K,J,T,N);
-    
-%     THETA = rand(K, J);
-%     for k = 1:K
-%         THETA(k,:) = THETA(k,:)/sum(THETA(k,:));
+%     Q = rand(K, N);
+%     R = rand(J, N, K);
+%     for i = 1:N
+%         Q(:,i) = Q(:,i)/sum(Q(:,i));
 %     end
-%     PI_K = rand(K, 1);
-%     PI_K = PI_K/sum(PI_K);
-% 
-%     ii = randperm(N);
-%     AVG_K = MRNA(:,ii(1:K));
-%     VARIANCE_K = rand(K, 1)*max(var(MRNA,0,2));
-%     ii = randperm(N);
-%     AVG_J = PROTEIN(:,ii(1:J));
-%     VARIANCE_J = rand(J, 1)*max(var(PROTEIN,0,2));
-%     
-%     [Q,R] = Expectation(PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N);
-%     return
+%     for i = 1:K
+%         for j = 1:N
+%             R(:,j,i) = R(:,j,i)/sum(R(:,j,i));
+%         end
+%     end
+%     [PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = Maximum(Q,R,MRNA,PROTEIN,K,J,T,N);
+    
+    THETA = rand(K, J);
+    for k = 1:K
+        THETA(k,:) = THETA(k,:)/sum(THETA(k,:));
+    end
+    PI_K = rand(K, 1);
+    PI_K = PI_K/sum(PI_K);
+
+    ii = randperm(N);
+    AVG_K = MRNA(:,ii(1:K));
+    VARIANCE_K = ones(K, 1)*mean(var(MRNA,0,2));
+    ii = randperm(N);
+    AVG_J = PROTEIN(:,ii(1:J));
+    VARIANCE_J = ones(J, 1)*mean(var(PROTEIN,0,2));  
+    [Q,R] = Expectation(PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N);
+
     % start optimization
     iter = 0;
     while iter < MAX_ITER
         low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N);
         if iter > 0
-            if b_verbose, fprintf('iter-%d  step: %f, dive-R: %f\n', iter, low_bound-last_low_bound, DivergenceOfR(R,K)); end
+            if b_verbose, fprintf('iter-%d  step: %f, low_bound: %f, dive-R: %f\n', iter, low_bound-last_low_bound,...
+                    low_bound, DivergenceOfR(R,K)); end
             if low_bound-last_low_bound < patience
                 if b_verbose, fprintf('iter-%d, converged!!!\n', iter); end
-%                 R = mean(R, 3);
                 break
             end
         end
@@ -47,7 +46,6 @@ function [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = ...
         [PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = Maximum(Q,R,MRNA,PROTEIN,K,J,T,N);
         last_low_bound = low_bound;
     end
-%     R = mean(R, 3);
 end
 
 %------------------------------------------------------------------------------------------------------------------------

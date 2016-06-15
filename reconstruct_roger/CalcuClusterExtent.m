@@ -7,7 +7,6 @@ for i = 1:N
         mrna_clusters{tmp_indices(ii)} = [mrna_clusters{tmp_indices(ii)} i];
     end    
 end
-SELETION_THRESHOLD = 0.4;
 protein_clusters = cell(J,1);
 for i = 1:N
     [values, indices] = sort(R_J(:,i));
