@@ -1,5 +1,5 @@
 function [W1,H1,W2,H2,THETA,HIS] = ...
-    CoNMF(MRNA, PROTEIN, K, J, hCoef, wCoef, tCoef, MAX_ITER, b_verbose)
+    CoNMF(MRNA, PROTEIN, K, J, wCoef, hCoef, tCoef, MAX_ITER, b_verbose, patience)
 
 [T,N] = size(MRNA);
 V1 = MRNA;
@@ -12,33 +12,78 @@ W2 = rand(T,J);
 H2 = rand(J,N);
 THETA = rand(K,J);
 
-HIS = zeros(MAX_ITER, 4);
 
+salphaI_K = sqrt(wCoef)*eye(K);
+sbetaE_K = sqrt(hCoef)*ones(1,K);
+salphaI_J = sqrt(wCoef)*eye(J);
+sbetaE_J = sqrt(hCoef)*ones(1,J);
+sbetaE_Theta = sqrt(tCoef)*ones(1,K);
+
+
+zero1N = zeros(1,N);
+zero1J = zeros(1,J);
+zeroKT = zeros(K,T);
+zeroJT = zeros(J,T);
+
+HIS = zeros(MAX_ITER, 5);
+last_cost = Inf;
+% mode_forward = true;
 for i = 1:MAX_ITER
-    if b_verbose, outputCost(i,V1,W1,H1,V2,W2,H2,THETA);end
     
-    %     if rand < 0.5
-%     if mod((i-1), 20) < 10
-        % first
-        H1 = updateH(V1,W1,H1,hCoef);
-%         W2 = W1*THETA;
-%         H2 = updateH(V2,W2,H2,hCoef);
-        % second
-        W1 = updateW(V1,W1,H1,wCoef);
-%         W2 = updateW(V2,W2,H2,wCoef);
-%         THETA = updateH(W2,W1,THETA,tCoef);
-%     else
-%         % third
-%         W1 = W2*pinv(THETA);
-%         H1 = updateH(V1,W1,H1,hCoef);
-%         H2 = updateH(V2,W2,H2,hCoef);
-%         % fourth
-%         W1 = updateW(V1,W1,H1,wCoef);
-%         W2 = updateW(V2,W2,H2,wCoef);
-%         THETA = pinv(updateH(W1,W2,pinv(THETA),tCoef));
-%     end
-%     
+    %     if mode_forward
+    %     if mod((i-1), 10) < 5
+    % first
+    H1 = updateH([V1;zero1N],[W1;sbetaE_K],H1);
+    W2 = W1*THETA;
+    H2 = updateH([V2;zero1N],[W2;sbetaE_J],H2);
+    
+    % second
+    W1 = updateW([V1 zeroKT'],W1,[H1 salphaI_K']);
+    W2 = updateW([V2 zeroJT'],W2,[H2 salphaI_J']);
+    THETA = updateH([W2;zero1J],[W1;sbetaE_Theta],THETA);
+    
+    %     else
+    %         % third
+    %         W1 = W2*pinv(THETA);
+    %         H1 = updateH([V1;zero1N],[W1;sbetaE_K],H1);
+    %         H2 = updateH([V2;zero1N],[W2;sbetaE_J],H2);
+    %
+    %         % fourth
+    %         W1 = updateW([V1 zeroKT'],W1,[H1 salphaI_K']);
+    %         W2 = updateW([V2 zeroJT'],W2,[H2 salphaI_J']);
+    %         THETA = pinv(updateHTest(W1,W2,pinv(THETA),tCoef));
+    %     end
+    
+%     %first
+%     H1 = updateH(V1,W1,H1,hCoef);
+%     W2 = W1*THETA;
+%     H2 = updateH(V2,W2,H2,hCoef);
+%     %second
+%     W1 = updateW(V1,W1,H1,wCoef);
+%     W2 = updateW(V2,W2,H2,wCoef);
+%     THETA = updateH(W2,W1,THETA,tCoef);
+    %     else
+    %         % third
+    %         W1 = W2*pinv(THETA);
+    %         H1 = updateH(V1,W1,H1,hCoef);
+    %         H2 = updateH(V2,W2,H2,hCoef);
+    %         % fourth
+    %         W1 = updateW(V1,W1,H1,wCoef);
+    %         W2 = updateW(V2,W2,H2,wCoef);
+    %         THETA = pinv(updateH(W1,W2,pinv(THETA),tCoef));
+    %     end
+    %
+    if b_verbose, outputCost(i,V1,W1,H1,V2,W2,H2,THETA);end
     HIS(i,:) = recordCost(V1,W1,H1,V2,W2,H2,THETA);
+    promote = last_cost - HIS(i,1);
+    %     fprintf('%d,  promote - %f\n', i, promote);
+    if promote > 0 && promote < patience
+        %        mode_forward = ~mode_forward;
+        
+        %        last_cost = Inf;
+        break;
+    end
+    last_cost = HIS(i,1);
 end
 end
 %------------------------------------------------------------------------------------------------------------------------
@@ -61,25 +106,39 @@ end
 % W(W<0) = 0;
 % end
 
-function H = updateH(V,W,H,coef)
-[H,~,~] = nnlsm_activeset(W,V,1,0,H);
+function H = updateH(V,W,H)
+[H,~,~] = nnlsm_blockpivot(W,V,0,H);
 end
-function W = updateW(V,W,H,coef)
-[W,~,~] = nnlsm_activeset(H',V',1,0,W');
+function W = updateW(V,W,H)
+[W,~,~] = nnlsm_blockpivot(H',V',0,W');
 W = W';
 end
+
+% function H = updateH(V,W,H)
+% [H,~,~] = nnlsm_activeset(W,V,1,0,H);
+% end
+% function W = updateW(V,W,H)
+% [W,~,~] = nnlsm_activeset(H',V',1,0,W');
+% W = W';
+% end
 
 function c = cost(V,W,H)
 c = sqrt(sum(sum((V-W*H).^2)));
 end
 
 function outputCost(i,V1,W1,H1,V2,W2,H2,THETA)
-fprintf('iter-%d   V1-cost: %f, V2-cost: %f, CO-cost: %f - %f\n', ...
-    i, cost(V1,W1,H1), cost(V2,W2,H2), cost(W2,W1,THETA), cost(W1,W2,pinv(THETA)));
+record = recordCost(V1,W1,H1,V2,W2,H2,THETA);
+
+fprintf('iter-%d  Whole-cost:%f, V1-cost: %f, V2-cost: %f, CO-cost: %f - %f\n', ...
+    i, record(1), record(2), record(3), record(4), record(5));
 end
 
-function c = recordCost(V1,W1,H1,V2,W2,H2,THETA)
-c = [cost(V1,W1,H1), cost(V2,W2,H2), cost(W2,W1,THETA), cost(W1,W2,pinv(THETA))];
+function record = recordCost(V1,W1,H1,V2,W2,H2,THETA)
+a = cost(V1,W1,H1);
+b = cost(V2,W2,H2);
+c = cost(W2,W1,THETA);
+d = cost(W1,W2,pinv(THETA));
+record = [a+b+c+d a b c d];
 end
 
 
