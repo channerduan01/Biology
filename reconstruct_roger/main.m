@@ -35,6 +35,7 @@ error_result_num = 0;
 while true
     % -------- permuted Proteins
     ii = randperm(N);
+    MRNA(:,1:N) = MRNA(:,ii);
     PROTEIN(:,1:N) = PROTEIN(:,ii);
     % --------
     i = i + 1;

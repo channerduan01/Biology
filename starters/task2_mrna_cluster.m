@@ -20,7 +20,7 @@ max_ = max(max(A));
 A = (A-min_)/(max_-min_);
 % figure(1), clf, imagesc([mrna zeros(N,1) A'*(max_-min_)+min_])
 
-k = 10;
+k = 15;
 cost = @(A,W,H) norm(A-W*H,'fro');
 
 %% k-means
@@ -52,10 +52,10 @@ drawCheckDataDistribution(A',idx,'ALS');
 [W,H] = mynmf(A,k,'METHOD','ALS_W','verbose',0);
 [~,idx] = max(H);
 cost(A,W,H)
-drawGeneTimesequence(A',idx,k);
+% drawGeneTimesequence(A',idx,k);
 drawCheckDataDistribution(A',idx,'ALS-W');
 %% SNMF
-[W,H] = nmf(A,k,'type','sparse','nnls_solver','bp','verbose',1);
+[W,H] = nmf(A,7,'type','sparse','nnls_solver','as','MAX_ITER',5,'verbose',1);
 [~,idx] = max(H);
 cost(A,W,H)
 % drawGeneTimesequence(A',idx,k);

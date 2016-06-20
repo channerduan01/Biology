@@ -1,11 +1,12 @@
 %% init
 
-% close all
-% clear
+close all
+clear
 clc
 
 load RESULT
 load RESULT_protein_permuted
+load RESULT_mrna_protein_permuted
 
 REPEAT = length(RESULT);
 
@@ -31,13 +32,18 @@ end
 %% empirical
 entropy_k_j_true = zeros(1,REPEAT);
 entropy_k_j_permuted = zeros(1,REPEAT);
+entropy_k_j_both_permuted = zeros(1,REPEAT);
 entropy_j_k_true = zeros(1,REPEAT);
 entropy_j_k_permuted = zeros(1,REPEAT);
+entropy_j_k_both_permuted = zeros(1,REPEAT);
 for i = 1:REPEAT
     entropy_k_j_true(i) = RESULT{i}.entropy_k_j;
     entropy_k_j_permuted(i) = RESULT_protein_permuted{i}.entropy_k_j;
+    entropy_k_j_both_permuted(i) = RESULT_mrna_protein_permuted{i}.entropy_k_j;
+    
     entropy_j_k_true(i) = RESULT{i}.entropy_j_k;
-    entropy_j_k_permuted(i) = RESULT_protein_permuted{i}.entropy_j_k;    
+    entropy_j_k_permuted(i) = RESULT_protein_permuted{i}.entropy_j_k;
+    entropy_j_k_both_permuted(i) = RESULT_mrna_protein_permuted{i}.entropy_j_k;
 end
 
 figure();
@@ -46,12 +52,14 @@ hold on
 plot(x,pdft)
 [pdft,x] = ksdensity(entropy_j_k_permuted);
 plot(x,pdft)
+[pdft,x] = ksdensity(entropy_j_k_both_permuted);
+plot(x,pdft)
 hold off
 set(gca,'FontSize',16);
 xlabel('Entropy of p(j | k)', 'FontSize', 16);
 ylabel('Empirical density', 'FontSize', 16);
 title('Entropy Analysis', 'FontSize', 20)
-legend('true', 'permuted');
+legend('true', 'protein permuted', 'both permuted');
 
 
 figure();
@@ -60,12 +68,14 @@ hold on
 plot(x,pdft)
 [pdft,x] = ksdensity(entropy_k_j_permuted);
 plot(x,pdft)
+[pdft,x] = ksdensity(entropy_k_j_both_permuted);
+plot(x,pdft)
 hold off
 set(gca,'FontSize',16);
 xlabel('Entropy of p(k | j)', 'FontSize', 16);
 ylabel('Empirical density', 'FontSize', 16);
 title('Entropy Analysis', 'FontSize', 20)
-legend('true', 'permuted');
+legend('true', 'protein permuted', 'both permuted');
 
 
 
