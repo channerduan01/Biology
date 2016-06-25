@@ -36,7 +36,7 @@ function [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = ...
         if iter > 0
             if b_verbose, fprintf('iter-%d  step: %f, low_bound: %f, dive-R: %f\n', iter, low_bound-last_low_bound,...
                     low_bound, DivergenceOfR(R,K)); end
-            if low_bound-last_low_bound < patience
+            if low_bound-last_low_bound > 0 && low_bound-last_low_bound < patience
                 if b_verbose, fprintf('iter-%d, converged!!!\n', iter); end
                 break
             end

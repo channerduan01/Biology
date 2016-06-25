@@ -61,7 +61,7 @@ cost(A,W,H)
 % drawGeneTimesequence(A',idx,k);
 drawCheckDataDistribution(A',idx,'SNMF');
 %% NMFSC
-[W,H,~] = mynmf(A,k,'METHOD','NMFSC','verbose',1,'ALPHA',1,'BETA',1,'RATE',10,'MAX_ITER',5);
+[W,H,~] = mynmf(A,4,'METHOD','NMFSC','verbose',1,'ALPHA',1,'BETA',1,'RATE',10,'MAX_ITER',5);
 [~,idx] = max(H);
 cost(A,W,H)
 % drawGeneTimesequence(A',idx,k);

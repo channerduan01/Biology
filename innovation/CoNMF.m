@@ -41,17 +41,16 @@ for i = 1:MAX_ITER
     W1 = updateW([V1 zeroKT'],W1,[H1 salphaI_K']);
     W2 = updateW([V2 zeroJT'],W2,[H2 salphaI_J']);
     THETA = updateH([W2;zero1J],[W1;sbetaE_Theta],THETA);
-    
     %     else
-    %         % third
-    %         W1 = W2*pinv(THETA);
-    %         H1 = updateH([V1;zero1N],[W1;sbetaE_K],H1);
-    %         H2 = updateH([V2;zero1N],[W2;sbetaE_J],H2);
-    %
-    %         % fourth
-    %         W1 = updateW([V1 zeroKT'],W1,[H1 salphaI_K']);
-    %         W2 = updateW([V2 zeroJT'],W2,[H2 salphaI_J']);
-    %         THETA = pinv(updateHTest(W1,W2,pinv(THETA),tCoef));
+%             % third
+%             W1 = W2*pinv(THETA);
+%             H1 = updateH([V1;zero1N],[W1;sbetaE_K],H1);
+%             H2 = updateH([V2;zero1N],[W2;sbetaE_J],H2);
+%     
+%             % fourth
+%             W1 = updateW([V1 zeroKT'],W1,[H1 salphaI_K']);
+%             W2 = updateW([V2 zeroJT'],W2,[H2 salphaI_J']);
+%             THETA = pinv(updateHTest(W1,W2,pinv(THETA),tCoef));
     %     end
     
 %     %first
@@ -62,16 +61,14 @@ for i = 1:MAX_ITER
 %     W1 = updateW(V1,W1,H1,wCoef);
 %     W2 = updateW(V2,W2,H2,wCoef);
 %     THETA = updateH(W2,W1,THETA,tCoef);
-    %     else
-    %         % third
-    %         W1 = W2*pinv(THETA);
-    %         H1 = updateH(V1,W1,H1,hCoef);
-    %         H2 = updateH(V2,W2,H2,hCoef);
-    %         % fourth
-    %         W1 = updateW(V1,W1,H1,wCoef);
-    %         W2 = updateW(V2,W2,H2,wCoef);
-    %         THETA = pinv(updateH(W1,W2,pinv(THETA),tCoef));
-    %     end
+%     % third
+%     W1 = W2*pinv(THETA);
+%     H1 = updateH(V1,W1,H1,hCoef);
+%     H2 = updateH(V2,W2,H2,hCoef);
+%     % fourth
+%     W1 = updateW(V1,W1,H1,wCoef);
+%     W2 = updateW(V2,W2,H2,wCoef);
+%     THETA = pinv(updateH(W1,W2,pinv(THETA),tCoef));
     %
     if b_verbose, outputCost(i,V1,W1,H1,V2,W2,H2,THETA);end
     HIS(i,:) = recordCost(V1,W1,H1,V2,W2,H2,THETA);
@@ -104,6 +101,10 @@ end
 % function W = updateW(V,W,H,coef)
 % W = (pinv(H*H'+coef*eye(size(H,1)))*(H*V'))';
 % W(W<0) = 0;
+% end
+
+% function H = updateHTest(V,W,H,coef)
+%     H = H .* (W'*V)./(W'*W*H + coef*H + eps);
 % end
 
 function H = updateH(V,W,H)

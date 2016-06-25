@@ -1,13 +1,14 @@
 % The component for Project gradient descent
 % inspired by Hoyer's idea in Non-negative Matrix Factorization with Sparseness Constraints
 
-function s = projection_operator(x,L1,L2)
+function [s, iter] = projection_operator(x,L1,L2)
 
-
+iter = 0;
 dim = length(x);
 s = x + (L1-sum(x))/dim;
 z = zeros(dim,1);
 while true
+    iter = iter + 1;
     m = zeros(dim,1);
     m(~z) = L1/(dim-sum(z));
     if sum(s==m) == dim

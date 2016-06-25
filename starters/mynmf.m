@@ -20,6 +20,9 @@ par.verbose = 0;
 W = rand(m,k);
 H = rand(k,n);
 
+
+test_count = 0;
+
 % Read optional parameters
 if (rem(length(varargin),2)==1)
     error('Optional parameters should always go by pairs');
@@ -84,7 +87,8 @@ for iter=1:par.max_iter
 %             H = H - par.rate*W'*(W*H-A); % every iteration just descend
             H = pinv(W'*W+0*eye(k))*(W'*A); % every iteration get best solution
             for i = 1:length(H)
-                H(:,i) = projection_operator(H(:,i),par.alpha,par.beta);
+                [H(:,i), iter] = projection_operator(H(:,i),par.alpha,par.beta);
+                test_count = test_count+iter
             end
             W = W .* (A*H')./(W*H*H' + eps);
     end

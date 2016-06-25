@@ -1,4 +1,7 @@
 function [THETA_reverse, entropy_j_k, entropy_k_j] = BasicCoupleClusteringAnalysis(K, J, PI_K, THETA)
+
+    
+    
     THETA_reverse = zeros(fliplr(size(THETA)));
     for j = 1:J
         P_j = sum(THETA(:,j).*PI_K);
