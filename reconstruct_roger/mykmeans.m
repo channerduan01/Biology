@@ -15,7 +15,7 @@ for iter = 1:MAX_ITER
     for i = 1:N
         [dists(i),idx_min] = min(sum((W-repmat(V(:,i),1,K)).^2));
         H(idx_min,i) = 1;
-    end    
+    end
     
     % maximize
     for i = 1:K

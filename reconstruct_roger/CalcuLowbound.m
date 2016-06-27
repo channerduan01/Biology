@@ -11,7 +11,7 @@ function low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANC
        item2 = item2 - sum(log(Q(:,i)).*Q(:,i));
        for k = 1:K
            for j = 1:J
-               item456 = item456 + Q(k,i)*R(j,i,k)*(log(THETA(k,j)) - log(R(j,i,k)) + LOG_DENSITY_J(j,i));
+               item456 = item456 + Q(k,i)*R(j,i,k)*(log(THETA(k,j)) - log(R(j,i,k))+ LOG_DENSITY_J(j,i));
            end
        end
     end

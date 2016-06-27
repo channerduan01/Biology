@@ -20,7 +20,6 @@ function [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = ...
     end
     PI_K = rand(K, 1);
     PI_K = PI_K/sum(PI_K);
-
     ii = randperm(N);
     AVG_K = MRNA(:,ii(1:K));
     VARIANCE_K = ones(K, 1)*mean(var(MRNA,0,2));
@@ -33,6 +32,7 @@ function [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = ...
     iter = 0;
     while iter < MAX_ITER
         low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N);
+        if isnan(low_bound), throw('NaN value'); end
         if iter > 0
             if b_verbose, fprintf('iter-%d  step: %f, low_bound: %f, dive-R: %f\n', iter, low_bound-last_low_bound,...
                     low_bound, DivergenceOfR(R,K)); end

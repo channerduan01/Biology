@@ -1,4 +1,4 @@
-%% Roger EM coupled clustering model
+%% NMF coupled clustering model
 %
 % init data
 close all

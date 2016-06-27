@@ -1,0 +1,13 @@
+function [THETA_ORIGINAL] = CalcuTheta(H1_ORIGINAL, H2_ORIGINAL, K, J, N)
+
+PI_K_ = sum(H1_ORIGINAL,2)/N;
+THETA_ORIGINAL = zeros(K, J);
+for i = 1:N
+    THETA_ORIGINAL = THETA_ORIGINAL + H1_ORIGINAL(:, i)*H2_ORIGINAL(:, i)';
+end
+THETA_ORIGINAL = THETA_ORIGINAL ./ sum(sum(THETA_ORIGINAL));
+for j = 1:J
+    THETA_ORIGINAL(:,j) = THETA_ORIGINAL(:,j)./PI_K_;
+end
+
+

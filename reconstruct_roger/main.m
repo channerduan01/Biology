@@ -2,37 +2,38 @@
 %
 % init data
 close all
-clear
 clc
 
+% clear
 [MRNA, PROTEIN, PROTEIN_ORIGINAL, T, N, names] = GeneDataLoad();
 K = 15;
 J = 19;
 
-cost = @(V,W,H) norm(V-W*H,'fro');
 
-%% K-mean test
-% protein = cell(J,1);
-% [centres, idx] = mykmeans(PROTEIN, 19, 10);
-% for i = 1:N
-%     protein{idx(:,i)==1} = [protein{idx(:,i)==1} i];
-% end
-% % repeat = 1;
-% % opts = statset('Display','final');
-% % [idx,centres] = kmeans(V',K,'Replicates',repeat,'Options',opts,'Start','sample');
-% % W = centres';
-% % H = zeros(K,length(idx));
-% % for i = 1:length(idx)
-% %     H(idx(i),i) = 1;
+
+% %% K-mean test
+% cost = @(V,W,H) norm(V-W*H,'fro');
+% % protein = cell(J,1);
+% % [centres, idx] = mykmeans(PROTEIN, J, 10);
+% % for i = 1:N
+% %     protein{idx(:,i)==1} = [protein{idx(:,i)==1} i];
 % % end
-% % disp(['k-means cost:',num2str(cost(V,W,H))]);
+% repeat = 1;
+% opts = statset('Display','final');
+% [idx,centres] = kmeans(PROTEIN',J,'Replicates',repeat,'Options',opts,'Start','sample');
+% W = centres';
+% H = zeros(J,length(idx));
+% for i = 1:length(idx)
+%     H(idx(i),i) = 1;
+% end
+% disp(['k-means cost:',num2str(cost(PROTEIN,W,H))]);
 
 %% Roger's Model
 MAX_ITER = 100;
-patience = 10;
+patience = 5;
 REPEAPT = 1;
 RESULT = cell(REPEAPT,1);
-i = 0;
+index = 0;
 error_result_num = 0;
 while true
     % -------- permuted Proteins, keep annotation
@@ -40,8 +41,8 @@ while true
 %     MRNA(:,1:N) = MRNA(:,ii);
 %     PROTEIN(:,1:N) = PROTEIN(:,ii);
     % --------
-    i = i + 1;
-    if i > REPEAPT, break;end
+    index = index + 1;
+    if index > REPEAPT, break;end
     [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = ...
         MyCoupleClustering(MRNA, PROTEIN, K, J, MAX_ITER, patience, true);
     R_J = zeros(J, N);
@@ -55,14 +56,14 @@ while true
     low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N);
     if isnan(low_bound) || low_bound == -Inf || low_bound == Inf
         error_result_num = error_result_num + 1;
-        i = i - 1;
+        index = index - 1;
         continue;
     end
-    RESULT{i} = struct('low_bound',low_bound,'entropy_j_k',entropy_j_k,'entropy_k_j',entropy_k_j, ...
+    RESULT{index} = struct('low_bound',low_bound,'entropy_j_k',entropy_j_k,'entropy_k_j',entropy_k_j, ...
         'THETA_reverse',THETA_reverse,'Q',Q,'R',R,'R_J',R_J,'PI_K',PI_K,'AVG_K',AVG_K, ...
         'VARIANCE_K',VARIANCE_K,'THETA',THETA,'AVG_J',AVG_J,'VARIANCE_J',VARIANCE_J);
     fprintf('Low bound is %f\n', low_bound);
-    fprintf('cost is %f\n', cost(AVG_J,AVG_K,THETA_reverse'));
+%     fprintf('cost is %f\n', cost(AVG_J,AVG_K,THETA_reverse'));
     fprintf('Entropy of p(j|k) = %f\n', entropy_j_k);
     fprintf('Entropy of p(k|j) = %f\n', entropy_k_j);
 end
