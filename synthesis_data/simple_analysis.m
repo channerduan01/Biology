@@ -1,4 +1,4 @@
-%% 
+%%
 % Methods comparison
 
 addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
@@ -50,7 +50,7 @@ fprintf('k-means norm-fro of gap: %.2f, norm-1 of gap: %.2f\n', ...
 % for k = 1:K
 %     THETA2(k,:) = THETA2(k,:)./sum(THETA2(k,:));
 % end
-% 
+%
 % [mrna_consistency,mrna_C2] = CalcuConsistency(IDX_MATRIX_MRNA([1,3],:));
 % [protein_consistency,protein_C2] = CalcuConsistency(IDX_MATRIX_PROTEIN([1,3],:));
 % fprintf('SNMF mrna consistency: %f, protein consistency: %f\n', mrna_consistency, protein_consistency);
@@ -61,16 +61,12 @@ fprintf('k-means norm-fro of gap: %.2f, norm-1 of gap: %.2f\n', ...
 index_ = 4;
 [Q,R,PI_K,AVG_K,VARIANCE_K,THETA3,AVG_J,VARIANCE_J] = ...
     MyCoupleClustering(MRNA, PROTEIN, K, J, 100, 1, true);
-R_J = zeros(J, N);
-for j = 1:J
-    for i = 1:N
-        tmp = R(j,i,:);
-        R_J(j,i) = sum(tmp(:).*PI_K);
-    end
-end
+[THETA_reverse, entropy_j_k, entropy_k_j] = EntropyCalculate(K, J, PI_K, THETA3);
+[R_J, Q_J] = CalcuSubclusterBelonging(MRNA, AVG_K, VARIANCE_K, PROTEIN, AVG_J, VARIANCE_J, PI_K, THETA_reverse, R, K, J, N, T);
+
 [~, idx1] = max(Q);
 IDX_MATRIX_MRNA(index_,:) = idx1;
-[~, idx2] = max(R_J);
+[~, idx2] = max(Q_J);
 IDX_MATRIX_PROTEIN(index_,:) = idx2;
 
 % recover THETA to original order!

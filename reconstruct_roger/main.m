@@ -3,8 +3,7 @@
 % init data
 close all
 clc
-
-% clear
+clear
 [MRNA, PROTEIN, PROTEIN_ORIGINAL, T, N, names] = GeneDataLoad();
 K = 15;
 J = 19;
@@ -30,40 +29,39 @@ J = 19;
 
 %% Roger's Model
 MAX_ITER = 100;
-patience = 5;
-REPEAPT = 1;
+patience = 1;
+REPEAPT = 10;
 RESULT = cell(REPEAPT,1);
 index = 0;
 error_result_num = 0;
 while true
     % -------- permuted Proteins, keep annotation
-%     ii = randperm(N);
-%     MRNA(:,1:N) = MRNA(:,ii);
-%     PROTEIN(:,1:N) = PROTEIN(:,ii);
+    %     ii = randperm(N);
+    %     MRNA(:,1:N) = MRNA(:,ii);
+    %     PROTEIN(:,1:N) = PROTEIN(:,ii);
     % --------
     index = index + 1;
     if index > REPEAPT, break;end
-    [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = ...
-        MyCoupleClustering(MRNA, PROTEIN, K, J, MAX_ITER, patience, true);
-    R_J = zeros(J, N);
-    for j = 1:J
-        for i = 1:N
-            tmp = R(j,i,:);
-            R_J(j,i) = sum(tmp(:).*PI_K);
-        end
+    try
+        [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = ...
+            MyCoupleClustering(MRNA, PROTEIN, K, J, MAX_ITER, patience, true);
+        [THETA_reverse, entropy_j_k, entropy_k_j] = EntropyCalculate(K, J, PI_K, THETA);
+        [R_J, Q_J] = CalcuSubclusterBelonging(MRNA, AVG_K, VARIANCE_K, PROTEIN, AVG_J, VARIANCE_J, PI_K, THETA_reverse, R, K, J, N, T);
+        low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N);
+    catch ME
+        low_bound = NaN;
+        fprintf('error!!!\n')
     end
-    [THETA_reverse, entropy_j_k, entropy_k_j] = EntropyCalculate(K, J, PI_K, THETA);
-    low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N);
     if isnan(low_bound) || low_bound == -Inf || low_bound == Inf
         error_result_num = error_result_num + 1;
         index = index - 1;
         continue;
     end
     RESULT{index} = struct('low_bound',low_bound,'entropy_j_k',entropy_j_k,'entropy_k_j',entropy_k_j, ...
-        'THETA_reverse',THETA_reverse,'Q',Q,'R',R,'R_J',R_J,'PI_K',PI_K,'AVG_K',AVG_K, ...
+        'THETA_reverse',THETA_reverse,'Q',Q,'R',R,'R_J',R_J,'Q_J',Q_J,'PI_K',PI_K,'AVG_K',AVG_K, ...
         'VARIANCE_K',VARIANCE_K,'THETA',THETA,'AVG_J',AVG_J,'VARIANCE_J',VARIANCE_J);
     fprintf('Low bound is %f\n', low_bound);
-%     fprintf('cost is %f\n', cost(AVG_J,AVG_K,THETA_reverse'));
+    %     fprintf('cost is %f\n', cost(AVG_J,AVG_K,THETA_reverse'));
     fprintf('Entropy of p(j|k) = %f\n', entropy_j_k);
     fprintf('Entropy of p(k|j) = %f\n', entropy_k_j);
 end
@@ -74,8 +72,8 @@ if REPEAPT > 1
     for i = 1:REPEAPT
         [~, idx] = max(RESULT{i}.Q);
         IDX_MATRIX_MRNA(i,:) = idx;
-        [~, idx] = max(RESULT{i}.R_J);
-        IDX_MATRIX_PROTEIN(i,:) = idx;  
+        [~, idx] = max(RESULT{i}.Q_J);
+        IDX_MATRIX_PROTEIN(i,:) = idx;
     end
     [mrna_consistency,mrna_C] = CalcuConsistency(IDX_MATRIX_MRNA);
     [protein_consistency,protein_C] = CalcuConsistency(IDX_MATRIX_PROTEIN);
@@ -87,30 +85,15 @@ SELETION_THRESHOLD = 0.3;
 OutputClustersNM(K, J, mrna_clusters, protein_clusters, names);
 ANALYSIS_PROTEIN_CLUSTER_IDX = 5;
 ClusterAnalysis(ANALYSIS_PROTEIN_CLUSTER_IDX, Q, protein_clusters, MRNA, PROTEIN_ORIGINAL);
- 
 
-%% test1
-PI_J = sum(R_J,2)/N;
-Q_J = zeros(J, N);
-for j = 1:J
-   for i = 1:N
-       for k = 1:K
-        Q_J(j,i) = Q_J(j,i) + PI_J(j)*THETA_reverse(j,k)*mvnpdf(MRNA(:,i)',AVG_K(:,k)',VARIANCE_K(k)*eye(T))...
-            *mvnpdf(PROTEIN(:,i)',AVG_J(:,j)',VARIANCE_J(j)*eye(T));
-       end
-   end
-end
-for i = 1:N
-    Q_J(:,i) = Q_J(:,i)/sum(Q_J(:,i));
-end
 
 %% test2
 co_K_J = zeros(K, J, N);
 for i = 1:N
     for k = 1:K
-       for j = 1:J
-           co_K_J(k,j,i) = Q(k,i)*Q_J(j,i);
-       end
+        for j = 1:J
+            co_K_J(k,j,i) = Q(k,i)*Q_J(j,i);
+        end
     end
 end
 K_J = sum(co_K_J,3)/N;
