@@ -32,7 +32,7 @@ function [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = ...
     iter = 0;
     while iter < MAX_ITER
         low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N);
-        if isnan(low_bound), throw('NaN value'); end
+        if isnan(low_bound), throw(MException('MyCoupleClustering:Nan','Nan value!!!')); end
         if iter > 0
             if b_verbose, fprintf('iter-%d  step: %f, low_bound: %f, dive-R: %f\n', iter, low_bound-last_low_bound,...
                     low_bound, DivergenceOfR(R,K)); end
@@ -115,7 +115,7 @@ function [Q,R] = Expectation(PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,P
     TMP_J_SUM_MATRIX = zeros(K, N);
     for k = 1:K
         for j = 1:J
-             R(j,:,k) = mvnpdf(PROTEIN',AVG_J(:,j)',VARIANCE_J(j)*eye(T))'*THETA(k,j);
+             R(j,:,k) = MyMvnpdf(PROTEIN',AVG_J(:,j)',VARIANCE_J(j)*eye(T))'*THETA(k,j);
         end
         for i = 1:N
             TMP_J_SUM_MATRIX(k,i) = sum(R(:,i,k));
@@ -123,7 +123,7 @@ function [Q,R] = Expectation(PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,P
         end
     end
     for k = 1:K
-        Q(k,:) = mvnpdf(MRNA',AVG_K(:,k)',VARIANCE_K(k)*eye(T))'*PI_K(k).*TMP_J_SUM_MATRIX(k,:);
+        Q(k,:) = MyMvnpdf(MRNA',AVG_K(:,k)',VARIANCE_K(k)*eye(T))'*PI_K(k).*TMP_J_SUM_MATRIX(k,:);
     end
     for i = 1:N
         Q(:,i) = Q(:,i)/sum(Q(:,i));

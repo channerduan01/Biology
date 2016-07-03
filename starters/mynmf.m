@@ -19,7 +19,11 @@ par.verbose = 0;
 
 W = rand(m,k);
 H = rand(k,n);
-
+% only for test ===================================
+for i = 1:n
+    H(:,i) = H(:,i)/sum(H(:,i));
+end
+% =================================================
 
 test_count = 0;
 
@@ -72,6 +76,12 @@ for iter=1:par.max_iter
         case 'MU'
             %     H = H .* (W'*A)./(W'*W*H + b*ones(r)*H + eps);
             H = H .* (W'*A)./(W'*W*H + par.beta*H + eps);
+            % only for test ===================================
+            for i = 1:n
+                H(:,i) = H(:,i) + (1-sum(H(:,i)))/length(H(:,i));
+            end
+            H(H<0) = 0;
+            % =================================================
             W = W .* (A*H')./(W*H*H' + par.alpha*W + eps);
         case 'ALS'
             H = pinv(W'*W+par.beta*eye(k))*(W'*A);
@@ -84,11 +94,11 @@ for iter=1:par.max_iter
             W(W<0) = 0;
         case 'NMFSC'
             % special step for sparsity matrix, a small rate is important
-%             H = H - par.rate*W'*(W*H-A); % every iteration just descend
+            %             H = H - par.rate*W'*(W*H-A); % every iteration just descend
             H = pinv(W'*W+0*eye(k))*(W'*A); % every iteration get best solution
             for i = 1:length(H)
-                [H(:,i), iter] = projection_operator(H(:,i),par.alpha,par.beta);
-                test_count = test_count+iter
+                [H(:,i), ~] = projection_operator(H(:,i),par.alpha,par.beta);
+                %                 test_count = test_count+iter
             end
             W = W .* (A*H')./(W*H*H' + eps);
     end

@@ -133,7 +133,7 @@ function [W,H,iter,HIS]=nmf(A,k,varargin)
         error(['Unrecognized nnls_solver: use ''bp'' or ''as''.']);
     end
     
-    display(par);
+    if par.verbose, display(par);end;
     
     HIS = 0;
     if par.verbose          % collect information for analysis/debugging
@@ -179,6 +179,12 @@ function [W,H,iter,HIS]=nmf(A,k,varargin)
                 gradH = (W'*W)*H - W'*A + par.beta*H;
             case 'sparse'
                 [H,gradHX,subIterH] = nnlsm([W;sbetaE],[A;zero1n],H,par.nnls_solver);
+                % only for test ===================================
+                for i = 1:n
+                    H(:,i) = H(:,i) + (1-sum(H(:,i)))/length(H(:,i));
+                end
+                % =================================================
+                H(H<0) = 0;
                 [W,gradW,subIterW] = nnlsm([H';salphaI],[A';zerokm],W',par.nnls_solver);, W=W';, gradW=gradW';
                 gradH = (W'*W)*H - W'*A + betaI*H;
         end
@@ -233,7 +239,8 @@ function [W,H,iter,HIS]=nmf(A,k,varargin)
     final.relative_error = norm(A-W*H,'fro')/norm(A,'fro');
     final.W_density = length(find(W>0))/(m*k);
     final.H_density = length(find(H>0))/(n*k);
-    display(final);
+    
+    if par.verbose, display(final);end;
 end
 
 %------------------------------------------------------------------------------------------------------------------------

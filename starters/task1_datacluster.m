@@ -5,7 +5,7 @@ close all
 clear
 clc
 
-scene = 2;
+scene = 1;
 switch scene
     case 1 % this case cannot be separate by NMF, but easy for k-means
         m1=[4;4];
@@ -90,12 +90,12 @@ drawClusters(idx,centres,X,N,ii,'K-means')
 %% MU
 [W,H,~] = mynmf(A,k,'verbose',0,'ALPHA',0,'BETA',0,'W_INIT',eye(2),'H_INIT',A);
 [~,idx] = max(H);
-% drawClusters(idx',W',X,N,ii,'MU')
+drawClusters(idx',W',X,N,ii,'MU')
 cost(A,W,H)
 %% ALS
 [W,H,~] = mynmf(A,k,'METHOD','MU','verbose',0,'ALPHA',0,'BETA',10,'W_INIT',eye(2),'H_INIT',A);
 [~,idx] = max(H);
-% drawClusters(idx',W',X,N,ii,'ALS')
+drawClusters(idx',W',X,N,ii,'ALS')
 cost(A,W,H)
 %% CVX
 % [W,H,~] = mynmf(A,k,'METHOD','CVX','verbose',1,'MAX_ITER',20);
@@ -109,40 +109,40 @@ disp([norm(W,'fro'),norm(H,'fro')]);
 drawClusters(idx',W',X,N,ii,'SNMF')
 cost(A,W,H)
 
-%% NMFSC
-[W,H,~] = mynmf(A,k,'METHOD','NMFSC','verbose',1,'ALPHA',1,'BETA',1,'RATE',0.5, 'MAX_ITER',3);
-[~,idx] = max(H);
-drawClusters(idx',W',X,N,ii,'NMFSC')
-cost(A,W,H)
+% %% NMFSC
+% [W,H,~] = mynmf(A,k,'METHOD','NMFSC','verbose',1,'ALPHA',1,'BETA',1,'RATE',0.5, 'MAX_ITER',3);
+% [~,idx] = max(H);
+% drawClusters(idx',W',X,N,ii,'NMFSC')
+% cost(A,W,H)
 
 %% SVD ,,, cool!
-%% information is reducing quicker and quicker while giving energy up
-A = randn(1000,1000);
-[U,S,V] = svd(A);
-norm(A-U*S*V','fro')
-for i = 1000:-1:50
-    S(i,:) = 0;
-    if mod(i,20) == 0
-        norm(U*S*V'-A,'fro')
-        rank(U*S*V')
-    end
-end
-for i = 50:-1:1
-    S(i,:) = 0;
-    norm(U*S*V'-A,'fro')
-    rank(U*S*V')
-end
+% % information is reducing quicker and quicker while giving energy up
+% A = randn(1000,1000);
+% [U,S,V] = svd(A);
+% norm(A-U*S*V','fro')
+% for i = 1000:-1:50
+%     S(i,:) = 0;
+%     if mod(i,20) == 0
+%         norm(U*S*V'-A,'fro')
+%         rank(U*S*V')
+%     end
+% end
+% for i = 50:-1:1
+%     S(i,:) = 0;
+%     norm(U*S*V'-A,'fro')
+%     rank(U*S*V')
+% end
 
 %%
-[U,S,V] = svd(A);
-% S(:,3:400)=0;
-% V(:,3:400)=0;
-norm(A-U*S*V','fro')
+% [U,S,V] = svd(A);
+% % S(:,3:400)=0;
+% % V(:,3:400)=0;
+% norm(A-U*S*V','fro')
 
 %% Consistensy Analysis
 % consistensyAnalysis(A,2:2,100,@wrapKmeanAsNmf)
-consistensyAnalysis(A,2:2,100,@mynmf)
-consistensyAnalysis(A,2:2,100,@(A,k) mynmf(A,k,'METHOD','ALS','MAX_ITER',100))
+% consistensyAnalysis(A,2:2,100,@mynmf)
+% consistensyAnalysis(A,2:2,100,@(A,k) mynmf(A,k,'METHOD','ALS','MAX_ITER',100))
 % consistensyAnalysis(A,2:2,100,@(A,k) nmf(A,k,'type','sparse','nnls_solver','bp','BETA',0))
 
 

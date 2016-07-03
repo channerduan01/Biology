@@ -8,9 +8,7 @@ clear
 K = 15;
 J = 19;
 
-
-
-% %% K-mean test
+%% K-mean test
 % cost = @(V,W,H) norm(V-W*H,'fro');
 % % protein = cell(J,1);
 % % [centres, idx] = mykmeans(PROTEIN, J, 10);
@@ -27,10 +25,43 @@ J = 19;
 % end
 % disp(['k-means cost:',num2str(cost(PROTEIN,W,H))]);
 
+%% K-mean
+REPEAPT = 2;
+IDX_MATRIX_MRNA = zeros(REPEAPT, N);
+IDX_MATRIX_PROTEIN = zeros(REPEAPT, N);
+for index_ = 1:REPEAPT
+    repeat = 1;
+    opts = statset('Display','final');
+    [idx1,~] = kmeans(MRNA',K,'Replicates',repeat,'Options',opts,'Start','sample');
+    IDX_MATRIX_MRNA(index_,:) = idx1;
+    H1 = zeros(K,length(idx1));
+    for i = 1:length(idx1)
+        H1(idx1(i),i) = 1;
+    end
+    [idx2,~] = kmeans(PROTEIN',J,'Replicates',repeat,'Options',opts,'Start','sample');
+    IDX_MATRIX_PROTEIN(index_,:) = idx2;
+    H2 = zeros(J,length(idx2));
+    for i = 1:length(idx2)
+        H2(idx2(i),i) = 1;
+    end
+    THETA_KMEAN = CalcuTheta(H1, H2, K, J, N);
+end
+[mrna_consistency,mrna_C] = CalcuConsistency(IDX_MATRIX_MRNA);
+[protein_consistency,protein_C] = CalcuConsistency(IDX_MATRIX_PROTEIN);
+fprintf('mrna consistency: %f, protein consistency: %f\n', mrna_consistency, protein_consistency);
+
+%% Single Analysis
+SELETION_THRESHOLD = 0.3;
+[mrna_clusters, protein_clusters] = CalcuClusterExtent(K, J, N, H1, H2, SELETION_THRESHOLD);
+OutputClustersNM(K, J, mrna_clusters, protein_clusters, names);
+ANALYSIS_PROTEIN_CLUSTER_IDX = 10;
+ClusterAnalysis(ANALYSIS_PROTEIN_CLUSTER_IDX, H1, protein_clusters, MRNA, PROTEIN_ORIGINAL);
+
+
 %% Roger's Model
 MAX_ITER = 100;
 patience = 1;
-REPEAPT = 10;
+REPEAPT = 100;
 RESULT = cell(REPEAPT,1);
 index = 0;
 error_result_num = 0;
@@ -42,6 +73,7 @@ while true
     % --------
     index = index + 1;
     if index > REPEAPT, break;end
+    fprintf('\n\nstart round %d >>>>>>', index);
     try
         [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = ...
             MyCoupleClustering(MRNA, PROTEIN, K, J, MAX_ITER, patience, true);
@@ -80,32 +112,46 @@ if REPEAPT > 1
     fprintf('mrna consistency: %f, protein consistency: %f\n', mrna_consistency, protein_consistency);
 end
 %% Single Analysis
-SELETION_THRESHOLD = 0.3;
+SELETION_THRESHOLD = 0.8;
 [mrna_clusters, protein_clusters] = CalcuClusterExtent(K, J, N, Q, Q_J, SELETION_THRESHOLD);
 OutputClustersNM(K, J, mrna_clusters, protein_clusters, names);
-ANALYSIS_PROTEIN_CLUSTER_IDX = 5;
+ANALYSIS_PROTEIN_CLUSTER_IDX = 12;
 ClusterAnalysis(ANALYSIS_PROTEIN_CLUSTER_IDX, Q, protein_clusters, MRNA, PROTEIN_ORIGINAL);
 
 
-%% test2
-co_K_J = zeros(K, J, N);
-for i = 1:N
-    for k = 1:K
-        for j = 1:J
-            co_K_J(k,j,i) = Q(k,i)*Q_J(j,i);
-        end
+% %% test2
+% co_K_J = zeros(K, J, N);
+% for i = 1:N
+%     for k = 1:K
+%         for j = 1:J
+%             co_K_J(k,j,i) = Q(k,i)*Q_J(j,i);
+%         end
+%     end
+% end
+% K_J = sum(co_K_J,3)/N;
+% for j = 1:J
+%     K_J(:,j) = K_J(:,j)./PI_K(:);
+% end
+
+%%
+gene_idxs1 = [protein_clusters{1}(3:6) protein_clusters{10}(21:23) protein_clusters{7}(2:5)];
+figure();
+hold on;
+subplot(121), imagesc(MRNA(:,gene_idxs1)');
+subplot(122), imagesc(PROTEIN(:,gene_idxs1)');
+hold off;
+
+%%
+
+res = RESULT{1};
+for i = 2:20
+    if res.low_bound < RESULT{i}.low_bound
+        res = RESULT{i};
     end
 end
-K_J = sum(co_K_J,3)/N;
-for j = 1:J
-    K_J(:,j) = K_J(:,j)./PI_K(:);
-end
 
-
-
-
-
-
+Q = res.Q;
+Q_J = res.Q_J;
 
 
 

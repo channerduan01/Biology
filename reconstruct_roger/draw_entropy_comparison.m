@@ -55,10 +55,10 @@ plot(x,pdft)
 [pdft,x] = ksdensity(entropy_j_k_both_permuted);
 plot(x,pdft)
 hold off
-set(gca,'FontSize',16);
+set(gca,'FontSize',20);
 xlabel('Entropy of p(j | k)', 'FontSize', 16);
 ylabel('Empirical density', 'FontSize', 16);
-title('Entropy Analysis', 'FontSize', 20)
+title('Entropy Analysis (100 runs)', 'FontSize', 20)
 legend('true', 'protein permuted', 'both permuted');
 
 
@@ -71,11 +71,29 @@ plot(x,pdft)
 [pdft,x] = ksdensity(entropy_k_j_both_permuted);
 plot(x,pdft)
 hold off
-set(gca,'FontSize',16);
+set(gca,'FontSize',20);
 xlabel('Entropy of p(k | j)', 'FontSize', 16);
 ylabel('Empirical density', 'FontSize', 16);
-title('Entropy Analysis', 'FontSize', 20)
+title('Entropy Analysis (100 runs)', 'FontSize', 20)
 legend('true', 'protein permuted', 'both permuted');
+
+
+%%
+
+
+
+figure();
+hold on
+[pdft,x] = ksdensity(entropy_j_k_true);
+plot(x,pdft)
+[pdft,x] = ksdensity(entropy_j_k_permuted);
+plot(x,pdft)
+hold off
+set(gca,'FontSize',20);
+xlabel('Entropy of p(j | k)', 'FontSize', 16);
+ylabel('Empirical density', 'FontSize', 16);
+title('Entropy Analysis (100 runs)', 'FontSize', 20)
+legend('true', 'protein permuted');
 
 
 

@@ -9,11 +9,11 @@ for j = 1:J
 end
 p_tmp_mrna = zeros(N, K);
 for k = 1:K
-    p_tmp_mrna(:, k) = mvnpdf(MRNA',AVG_K(:,k)',VARIANCE_K(k)*eye(T));
+    p_tmp_mrna(:, k) = MyMvnpdf(MRNA',AVG_K(:,k)',VARIANCE_K(k)*eye(T));
 end
 p_tmp_protein = zeros(N, J);
 for j = 1:J
-    p_tmp_protein(:, j) = mvnpdf(PROTEIN',AVG_J(:,j)',VARIANCE_J(j)*eye(T));
+    p_tmp_protein(:, j) = MyMvnpdf(PROTEIN',AVG_J(:,j)',VARIANCE_J(j)*eye(T));
 end
 PI_J = sum(R_J,2)/N;
 Q_J = zeros(J, N);

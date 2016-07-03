@@ -4,10 +4,10 @@ clc
 
 addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 
-K = 5;
+K = 10;
 J = K;
 
-T = 6;
+T = 20;
 N = 500;
 
 %%
@@ -33,11 +33,11 @@ for j = 1:J
 end
 
 % force pattern ==================
-factor_gap = 1;
-for k = 1:K
-    AVG_K_(:,k) = ones(T,1)*k*factor_gap;
-    AVG_J_(:,k) = ones(T,1)*k*factor_gap;
-end
+% factor_gap = 1;
+% for k = 1:K
+%     AVG_K_(:,k) = ones(T,1)*k*factor_gap;
+%     AVG_J_(:,k) = ones(T,1)*k*factor_gap;
+% end
 % ================================
 
 
@@ -79,10 +79,17 @@ figure();
 imagesc(THETA_ORIGINAL);
 title('Real THETA');
 
+% Add noise =============================
+% MRNA = MRNA + randn(size(MRNA))*1;
+% PROTEIN = PROTEIN + randn(size(PROTEIN))*0.1;
 
-% Add noise
-MRNA = MRNA + randn(size(MRNA))*1.8;
-PROTEIN = PROTEIN + randn(size(PROTEIN))*1.5;
+% MRNA = MRNA + randn(size(MRNA))*0.1;
+% PROTEIN = PROTEIN + randn(size(PROTEIN))*1;
+
+% MRNA = MRNA + randn(size(MRNA))*1;
+% PROTEIN = PROTEIN + randn(size(PROTEIN))*1;
+% =======================================
+
 
 % Normalize original data
 MRNA = normalize(MRNA);

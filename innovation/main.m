@@ -2,33 +2,31 @@
 %
 % init data
 close all
-clear
+% clear
 clc
 
 addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 
-[MRNA, PROTEIN, PROTEIN_ORIGINAL, T, N, names] = GeneDataLoad();
-K = 15;
-J = 19;
+% [MRNA, PROTEIN, PROTEIN_ORIGINAL, T, N, names] = GeneDataLoad();
+% K = 15;
+% J = 19;
 
-%% taste
-[W1,H1,W2,H2,THETA,HIS] = ...
-    CoNMF(MRNA, PROTEIN, K, J, 0.1, 0.01, 0.01, 100, true, 0.1);
-plot(HIS(:,2:5));
-set(gca,'FontSize',16);
-xlabel('iteration', 'FontSize', 16);
-ylabel('cost', 'FontSize', 16);
-title('Gradient', 'FontSize', 20)
-legend('W1 and H1', 'W2 and H2', 'W1 and THETA', 'W2 and inverse THETA');
-
-for k = 1:K
-    THETA(k,:) = THETA(k,:)/sum(THETA(k,:));
-end
+% %% taste
+% [W1,H1,W2,H2,THETA,HIS] = ...
+%     CoNMF(MRNA, PROTEIN, K, J, 0.1, 0.01, 0.01, 100, true, 0.01);
+% % plot(HIS(:,2:5));
+% % set(gca,'FontSize',16);
+% % xlabel('iteration', 'FontSize', 16);
+% % ylabel('cost', 'FontSize', 16);
+% % title('Gradient', 'FontSize', 20)
+% % legend('W1 and H1', 'W2 and H2', 'W1 and THETA', 'W2 and inverse THETA');
+% 
+% for k = 1:K
+%     THETA(k,:) = THETA(k,:)/sum(THETA(k,:));
+% end
 
 %% Consistency
-MAX_ITER = 100;
-REPEAT = 10;
-patience = 1;
+REPEAT = 20;
 
 IDX_MATRIX_MRNA = zeros(REPEAT, N);
 IDX_MATRIX_PROTEIN = zeros(REPEAT, N);
@@ -38,8 +36,8 @@ while true
     i = i + 1;
     if i > REPEAT, break; end
     try
-    [W1,H1,W2,H2,THETA,HIS] = ...
-        CoNMF(MRNA, PROTEIN, K, J, 1, 1, 1, MAX_ITER, true, patience);
+        [W1,H1,W2,H2,THETA,HIS] = ...
+            CoNMF(MRNA, PROTEIN, 12, 12, 0.1, 0.01, 0.01, 100, true, 0.01);
     catch
         err_num = err_num+1;
         i = i - 1;
