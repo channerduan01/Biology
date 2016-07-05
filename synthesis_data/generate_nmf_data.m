@@ -9,7 +9,7 @@ clc
 
 addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 
-K = 20;
+K = 15;
 J = K;
 
 T = 200;
@@ -34,15 +34,15 @@ end
 %     end
 % end
 
-AVG_J_ = AVG_K_;
-COV_J_ = COV_K_;
-% AVG_J_ = zeros(T, J);
-% COV_J_ = zeros(T, T, J);
-% for i = 1:T
-%     j = floor(rand()*J)+1;
-%     AVG_J_(i,j) = VALUE_RANGE_D(floor(rand()*length(VALUE_RANGE_D))+1);
-%     COV_J_(i,i,j) = 0.3;
-% end
+% AVG_J_ = AVG_K_;
+% COV_J_ = COV_K_;
+AVG_J_ = zeros(T, J);
+COV_J_ = zeros(T, T, J);
+for i = 1:T
+    j = floor(rand()*J)+1;
+    AVG_J_(i,j) = VALUE_RANGE_D(floor(rand()*length(VALUE_RANGE_D))+1);
+    COV_J_(i,i,j) = 0.3;
+end
 
 MRNA = zeros(T, N);
 PROTEIN = zeros(T, N);
@@ -50,11 +50,14 @@ idx_last = 1;
 for k = 1:K
     num = floor((N-idx_last+1)/(K-k+1));
     range = idx_last:idx_last+num-1;
+%     MRNA(:, range) = abs(mvnrnd(AVG_K_(:,k)', COV_K_(:,:,k), num)');
+%     PROTEIN(:, range) = abs(mvnrnd(AVG_J_(:,k)', COV_J_(:,:,k), num)');
+    
     MRNA(:, range) = mvnrnd(AVG_K_(:,k)', COV_K_(:,:,k), num)';
-    PROTEIN(:, range) = mvnrnd(AVG_J_(:,k)', COV_J_(:,:,k), num)';
+    PROTEIN(:, range) = mvnrnd(AVG_J_(:,k)', COV_J_(:,:,k), num)';    
+    
     idx_last = idx_last+num;
 end
-
 
 
 % Calculate relationship between mRNA and protein
@@ -76,10 +79,7 @@ imagesc(THETA_ORIGINAL);
 title('Real THETA');
 
 
-% Normalize original data
-MRNA = normalize(MRNA);
-PROTEIN = normalize(PROTEIN);
-PROTEIN_ORIGINAL = PROTEIN;
+
 
 % Add noise =============================
 % MRNA = MRNA + randn(size(MRNA))*1;
@@ -87,8 +87,16 @@ PROTEIN_ORIGINAL = PROTEIN;
 
 % MRNA = MRNA + randn(size(MRNA))*0.1;
 % PROTEIN = PROTEIN + randn(size(PROTEIN))*1;
-% 
-% MRNA = MRNA + randn(size(MRNA))*0.01;
-% PROTEIN = PROTEIN + randn(size(PROTEIN))*0.01;
+
+MRNA = MRNA + randn(size(MRNA))*3;
+PROTEIN = PROTEIN + randn(size(PROTEIN))*3;
 % =======================================
+
+
+% Normalize original data
+% MRNA = normalize(MRNA);
+% PROTEIN = normalize(PROTEIN);
+% PROTEIN_ORIGINAL = PROTEIN;
+
+
 

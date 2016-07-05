@@ -72,9 +72,9 @@ toc
 %% SNMF innovative model
 tic
 index_ = 4;
-[W1,H1,W2,H2,THETA3,HIS,last_cost] = ...
-    CoNMF(MRNA, PROTEIN, K, J, 0.1, 0.01, 0.01, 100, false, 0.001);
-last_cost
+[W1,H1,W2,H2,~,HIS,last_iter] = ...
+    CoNMF_v2_separate(MRNA, PROTEIN, K, J);
+THETA3 = CalcuTheta(H1, H2, K, J, N);
 [~, idx1] = max(H1);
 IDX_MATRIX_MRNA(index_,:) = idx1;
 [~, idx2] = max(H2);
@@ -128,8 +128,6 @@ hold off;
 % end
 % 
 % % best_result = RESULT_{48};
-
-
 
 
 

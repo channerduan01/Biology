@@ -15,13 +15,20 @@ N = size(mrna,1);
 A = mrna';
 % A = conca';
 
-min_ = min(min(A));
-max_ = max(max(A));
-A = (A-min_)/(max_-min_);
+% min_ = min(min(A));
+% max_ = max(max(A));
+% A = (A-min_)/(max_-min_);
 % figure(1), clf, imagesc([mrna zeros(N,1) A'*(max_-min_)+min_])
 
 k = 15;
 cost = @(A,W,H) norm(A-W*H,'fro');
+%%
+consistensyAnalysis(A,k,100,@(A,k) nmf(A,k,'type','regularized','MAX_ITER',50 ,'MIN_ITER',50 ...
+    ,'ALPHA', 1, 'BETA', 2))
+%%
+[W,H] = nmf(A,k,'type','regularized','nnls_solver','bp','MAX_ITER',5,'verbose',1 ...
+    ,'ALPHA', 1, 'BETA', 2);
+
 
 %% k-means
 repeat = 1;
@@ -99,5 +106,4 @@ toc;
 
 
 %%
-mynmf(A,k,'METHOD','NMFSC','verbose',1,'ALPHA',1,'BETA',1,'RATE',10,'MAX_ITER',3,'MIN_ITER',1)
 

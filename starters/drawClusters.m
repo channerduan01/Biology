@@ -10,6 +10,7 @@ plot(centres(:,1),centres(:,2),'kx','MarkerSize',15,'LineWidth',5);
 title(text, 'FontSize', 20)
 xlabel('feature1', 'FontSize', 20);
 ylabel('feature2', 'FontSize', 20);
-axis([0 15 0 15]);
+% legend('class1', 'class2');
+% axis([0 15 0 15]);
 hold off
 end

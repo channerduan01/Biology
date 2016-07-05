@@ -5,7 +5,10 @@ close all
 clear
 clc
 
-scene = 1;
+addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
+
+
+scene = 6;
 switch scene
     case 1 % this case cannot be separate by NMF, but easy for k-means
         m1=[4;4];
@@ -38,11 +41,20 @@ switch scene
         C1=[1,0;0,1];
         C2=[2,1;1,2];
         C3=[2,-1;-1,2];
+    case 6 % extremely seperable data! NMF wins!
+        m1=[0,1];
+        m2=[2,0];
+        C1=[0,0;0,1];
+        C2=[3,0;0,0];
 end
 k = 2;
-N = 200;
+N = 300;
 X1 = mvnrnd(m1, C1, N);
 X2 = mvnrnd(m2, C2, N);
+X1 = X1 + randn(size(X1))*0.1;    % adding noise
+X2 = X2 + randn(size(X2))*0.1;    % adding noise
+X1 = abs(X1);
+X2 = abs(X2);
 if exist('m3','var'), X3 = mvnrnd(m3, C3, N); end;
 figure(1), clf,
 % grid on
@@ -53,7 +65,7 @@ if exist('X3','var'), plot(X3(:,1),X3(:,2),'g+'); end;
 title('Original data', 'FontSize', 20)
 xlabel('feature1', 'FontSize', 20);
 ylabel('feature2', 'FontSize', 20);
-axis([0 15 0 15]);
+axis([0 5 0 6]);
 set(gca,'FontSize',20);
 if exist('X3','var')
     legend('class1', 'class2', 'class3');
@@ -69,7 +81,10 @@ else
 end
 ii = randperm(length(data));
 X = data(ii,:);
+% X = normalize(data(ii,:));
 A = X';
+% figure();
+% plot(X(:,1),X(:,2),'mx');
 
 cost = @(A,W,H) norm(A-W*H,'fro');
 sparsity = @(L1,L2,dim) (sqrt(dim)-L1/sqrt(L2))/(sqrt(dim)-1);
@@ -84,30 +99,31 @@ H = zeros(k,length(idx));
 for i = 1:length(idx)
     H(idx(i),i) = 1;
 end
-disp(['k-means cost:',num2str(cost(A,W,H))]);
-drawClusters(idx,centres,X,N,ii,'K-means')
-
+drawClusters(idx,centres,X,N,ii,'K-means');
+fprintf('k-means-cost: %f\n', cost(A,W,H));
 %% MU
-[W,H,~] = mynmf(A,k,'verbose',0,'ALPHA',0,'BETA',0,'W_INIT',eye(2),'H_INIT',A);
+% [W,H,~] = mynmf(A,k,'verbose',0,'ALPHA',0,'BETA',0,'W_INIT',eye(k),'H_INIT',A);
+[W,H,~] = mynmf(A,k,'verbose',0,'ALPHA',2,'BETA',2);
 [~,idx] = max(H);
-drawClusters(idx',W',X,N,ii,'MU')
-cost(A,W,H)
+drawClusters(idx',W',X,N,ii,'MU');
+fprintf('MU-cost: %f\n', cost(A,W,H));
 %% ALS
-[W,H,~] = mynmf(A,k,'METHOD','MU','verbose',0,'ALPHA',0,'BETA',10,'W_INIT',eye(2),'H_INIT',A);
+% [W,H,~] = mynmf(A,k,'METHOD','MU','verbose',0,'ALPHA',10,'BETA',1,'W_INIT',eye(k),'H_INIT',A);
+[W,H,~] = mynmf(A,k,'METHOD','MU','verbose',0,'ALPHA',1,'BETA',1);
 [~,idx] = max(H);
-drawClusters(idx',W',X,N,ii,'ALS')
-cost(A,W,H)
+drawClusters(idx',W',X,N,ii,'ALS');
+fprintf('ALS-cost: %f\n', cost(A,W,H));
 %% CVX
 % [W,H,~] = mynmf(A,k,'METHOD','CVX','verbose',1,'MAX_ITER',20);
 % [~,idx] = max(H);
 % drawClusters(idx',W',X,N,ii,'CVX')
 % cost(A,W,H)
 %% SNMF
-[W,H,iter,HIS] = nmf(A,k,'type','sparse','nnls_solver','bp','verbose',0);
+[W,H,iter,HIS] = nmf(A,k,'type','regularized','nnls_solver','bp','verbose',0,'ALPHA',0,'BETA',1);
 [~,idx] = max(H);
-disp([norm(W,'fro'),norm(H,'fro')]);
-drawClusters(idx',W',X,N,ii,'SNMF')
-cost(A,W,H)
+% disp([norm(W,'fro'),norm(H,'fro')]);
+drawClusters(idx',W',X,N,ii,'BP');
+fprintf('BP-cost: %f\n', cost(A,W,H));
 
 % %% NMFSC
 % [W,H,~] = mynmf(A,k,'METHOD','NMFSC','verbose',1,'ALPHA',1,'BETA',1,'RATE',0.5, 'MAX_ITER',3);
@@ -147,9 +163,9 @@ cost(A,W,H)
 
 
 %% Sparsity test
-L1 = 1;
-L2 = 0.6;
-sparsity(L1,L2,2)
+% L1 = 1;
+% L2 = 0.6;
+% sparsity(L1,L2,2)
 
 % projection_operator(H(:,1),L1,L2)
 % profile viewer

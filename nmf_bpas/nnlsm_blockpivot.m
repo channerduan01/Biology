@@ -13,7 +13,7 @@
 %                        School of Computational Science and Engineering,
 %                        Georgia Institute of Technology
 %
-% Check updated code at http://www.cc.gatech.edu/~jingu
+% Check updated code at 
 % Please send bug reports, comments, or questions to Jingu Kim.
 % This code comes with no guarantee or warranty of any kind. Note that this algorithm assumes that the
 %      input matrix A has full column rank.
