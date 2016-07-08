@@ -12,10 +12,11 @@ addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 K = 15;
 J = K;
 
-T = 200;
+T = 300;
 N = 1000;
 
-VALUE_RANGE_D = [1,2,3];
+VALUE_RANGE_D = 3:6;
+VALUE_VARIANCE = 0.1;
 
 %%
 AVG_K_ = zeros(T, K);
@@ -24,7 +25,7 @@ for i = 1:T
     k = floor(rand()*K)+1;
 %     k = i;
     AVG_K_(i,k) = VALUE_RANGE_D(floor(rand()*length(VALUE_RANGE_D))+1);
-    COV_K_(i,i,k) = 0.3;
+    COV_K_(i,i,k) = VALUE_VARIANCE;
 end
 % for k = 1:K
 %     for i = 1:100
@@ -41,7 +42,7 @@ COV_J_ = zeros(T, T, J);
 for i = 1:T
     j = floor(rand()*J)+1;
     AVG_J_(i,j) = VALUE_RANGE_D(floor(rand()*length(VALUE_RANGE_D))+1);
-    COV_J_(i,i,j) = 0.3;
+    COV_J_(i,i,j) = VALUE_VARIANCE;
 end
 
 MRNA = zeros(T, N);
@@ -82,14 +83,14 @@ title('Real THETA');
 
 
 % Add noise =============================
-% MRNA = MRNA + randn(size(MRNA))*1;
-% PROTEIN = PROTEIN + randn(size(PROTEIN))*0.1;
+MRNA = MRNA + randn(size(MRNA))*1;
+PROTEIN = PROTEIN + randn(size(PROTEIN))*0.1;
 
 % MRNA = MRNA + randn(size(MRNA))*0.1;
-% PROTEIN = PROTEIN + randn(size(PROTEIN))*1;
+% PROTEIN = PROTEIN + randn(size(PROTEIN))*2;
 
-MRNA = MRNA + randn(size(MRNA))*3;
-PROTEIN = PROTEIN + randn(size(PROTEIN))*3;
+% MRNA = MRNA + randn(size(MRNA))*1;
+% PROTEIN = PROTEIN + randn(size(PROTEIN))*1;
 % =======================================
 
 
@@ -97,6 +98,10 @@ PROTEIN = PROTEIN + randn(size(PROTEIN))*3;
 % MRNA = normalize(MRNA);
 % PROTEIN = normalize(PROTEIN);
 % PROTEIN_ORIGINAL = PROTEIN;
+% MRNA(MRNA<0) = 0;
+% PROTEIN(PROTEIN<0) = 0;
+% MRNA = pow2(MRNA);
+% PROTEIN = pow2(PROTEIN);
 
 
 

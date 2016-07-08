@@ -7,7 +7,7 @@ addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 K = 10;
 J = K;
 
-T = 20;
+T = 50;
 N = 500;
 
 %%
@@ -92,9 +92,9 @@ title('Real THETA');
 
 
 % Normalize original data
-MRNA = normalize(MRNA);
-PROTEIN = normalize(PROTEIN);
-PROTEIN_ORIGINAL = PROTEIN;
+% MRNA = normalize(MRNA);
+% PROTEIN = normalize(PROTEIN);
+% PROTEIN_ORIGINAL = PROTEIN;
 
 
 

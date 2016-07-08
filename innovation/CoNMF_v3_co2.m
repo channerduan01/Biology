@@ -2,7 +2,7 @@
 % This is an intermediate product of the final algorithm
 % This algorithm does not consider coupled connnection! So THETA does not
 % work.
-function [W1,H1,W2,H2,THETA,HIS,last_iter] = CoNMF_v2_separate(MRNA, PROTEIN, K, J, varargin)
+function [W1,H1,W2,H2,THETA1,HIS,last_iter] = CoNMF_v3_co2(MRNA, PROTEIN, K, J, varargin)
 
 % default values of parameters
 par.method = '2STAGE';
@@ -23,12 +23,8 @@ H1 = rand(K,N);
 W2 = rand(T,J);
 H2 = rand(J,N);
 
-% only for test, no use in this version of algorithm ===================================
-THETA = rand(K,J);
-for k = 1:K
-    THETA(k,:) = THETA(k,:)/sum(THETA(k,:));
-end
-% ======================================================================================
+% Key params, my coupled matrix
+[C, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);
 
 % Read optional parameters
 if (rem(length(varargin),2)==1)
@@ -70,7 +66,7 @@ zeroJT = zeros(J,T);
 
 % main process start
 HIS = zeros(par.max_iter+1, 4);
-record = calcuCost(V1,W1,H1,V2,W2,H2,THETA);
+record = calcuCost(V1,W1,H1,V2,W2,H2,THETA1,THETA2);
 if par.verbose
     fprintf('CoNMF Init cost:%f  (V1-cost: %f, V2-cost: %f, Con-cost: %f - %f)\n', ...
         sum(record), record(1), record(2), record(3), record(4));
@@ -79,34 +75,35 @@ HIS(1, :) = record;
 last_cost = sum(record);
 for last_iter = 1:par.max_iter
     
-    % other test mode
+    % first
+    W1 = updateW(V1,W1,H1,par.wCoef);
+    H2 = H2 + par.tCoef*(H1'*THETA1)';
+%     H2 = H2.*(H1'*THETA1)';
+    H2 = normalizeColumn(H2);
+    W2 = updateW(V2,W2,H2,par.wCoef);
+    
+    % second
     H1 = updateH(V1,W1,H1,par.hCoef);
     H1 = normalizeColumn(H1);
     H2 = updateH(V2,W2,H2,par.hCoef);
     H2 = normalizeColumn(H2);
-    W1 = updateW(V1,W1,H1,par.wCoef);
+    [C, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);
+    
+    % third
     W2 = updateW(V2,W2,H2,par.wCoef);
+    H1 = H1 + par.tCoef*(H2'*THETA2)';
+    W1 = updateW(V1,W1,H1,par.wCoef);
     
-    %     % plain mode, for test
-    %     [H1,~,~] = nnlsm(W1,V1,H1);
-    %     [W1,~,~] = nnlsm(H1',V1',W1');
-    %     W1 = W1';
-    %     [H2,~,~] = nnlsm(W2,V2,H2);
-    %     [W2,~,~] = nnlsm(H2',V2',W2');
-    %     W2 = W2';
+    % fourth
+    H1 = updateH(V1,W1,H1,par.hCoef);
+    H1 = normalizeColumn(H1);
+    H2 = updateH(V2,W2,H2,par.hCoef);
+    H2 = normalizeColumn(H2);
+    [C, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);    
     
-    % regularized mode, real process
-%     [H1,~,~] = nnlsm([W1;eye_H_K],[V1;zeroKN],H1);
-%     [W1,~,~] = nnlsm([H1';eye_W_K],[V1';zeroKT],W1');
-%     W1 = W1';
-%     [H2,~,~] = nnlsm([W2;eye_H_J],[V2;zeroJN],H2);
-%     [W2,~,~] = nnlsm([H2';eye_W_J],[V2';zeroJT],W2');
-%     W2 = W2';
     
-
-
-
-    record = calcuCost(V1,W1,H1,V2,W2,H2,THETA);
+    % check results
+    record = calcuCost(V1,W1,H1,V2,W2,H2,THETA1,THETA2);
     new_cost = sum(record);
     HIS(last_iter+1, :) = record;
     step = last_cost - new_cost;
@@ -114,6 +111,9 @@ for last_iter = 1:par.max_iter
     if par.verbose
         fprintf('iter: %d, step: %f, cost: %f (V1-cost: %f, V2-cost: %f, Con-cost: %f & %f)\n', ...
             last_iter, step, new_cost, record(1), record(2), record(3), record(4));
+    end
+    if step > 0 && step < 1
+        break;
     end
 end
 end
@@ -124,20 +124,43 @@ function [X,grad,iter] = nnlsm(A,B,init)
 [X,grad,iter] = nnlsm_blockpivot(A,B,0,init);
 end
 
-function record = calcuCost(V1,W1,H1,V2,W2,H2,THETA)
+function [C, tk, tj] = updateTheta(H1, H2, K, J, N)
+C = H1*H2';
+tk = zeros(K,J);
+tj = zeros(J,K);
+PI_K_ = sum(H1,2)/N;
+PI_J_ = sum(H2,2)/N;
+for j = 1:J
+    tk(:,j) = C(:,j)./PI_K_;
+end
+for k = 1:K
+    tj(:,k) = C(k,:)./PI_J_';
+end
+tk = tk ./ N;
+tj = tj ./ N;
+end
+
+function record = calcuCost(V1,W1,H1,V2,W2,H2,THETA1,THETA2)
 cost = @(V,W,H) sqrt(sum(sum((V-W*H).^2)));
 a = cost(V1,W1,H1);
 b = cost(V2,W2,H2);
-c = cost(W2,W1,THETA);
-d = cost(W1,W2,pinv(THETA));
+c = norm((H1'*THETA1)'-H2,'fro');
+d = norm((H2'*THETA2)'-H1,'fro');
 record = [a b c d];
 end
 
+function A = normalizeRow(A)
+for i = 1:size(A,1)
+    A(i,:) = A(i,:)/sum(A(i,:));
+end
+A(A<0) = 0;
+end
+
 function A = normalizeColumn(A)
-    for i = 1:size(A,2)
-        A(:,i) = A(:,i)/sum(A(:,i));
-    end
-    A(A<0) = 0;
+for i = 1:size(A,2)
+    A(:,i) = A(:,i)/sum(A(:,i));
+end
+A(A<0) = 0;
 end
 
 % for test

@@ -219,6 +219,8 @@ function [W,H,iter,HIS]=nmf(A,k,varargin)
             end
         end
     end
+    fprintf('!!!!!!!!');
+    return;
     [m,n]=size(A);
     norm2=sqrt(sum(W.^2,1));
     toNormalize = norm2>0;

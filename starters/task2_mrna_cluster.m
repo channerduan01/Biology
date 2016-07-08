@@ -22,13 +22,6 @@ A = mrna';
 
 k = 15;
 cost = @(A,W,H) norm(A-W*H,'fro');
-%%
-consistensyAnalysis(A,k,100,@(A,k) nmf(A,k,'type','regularized','MAX_ITER',50 ,'MIN_ITER',50 ...
-    ,'ALPHA', 1, 'BETA', 2))
-%%
-[W,H] = nmf(A,k,'type','regularized','nnls_solver','bp','MAX_ITER',5,'verbose',1 ...
-    ,'ALPHA', 1, 'BETA', 2);
-
 
 %% k-means
 repeat = 1;
