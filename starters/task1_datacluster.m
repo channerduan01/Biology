@@ -8,7 +8,7 @@ clc
 addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 
 
-scene = 6;
+scene = 7;
 switch scene
     case 1 % this case cannot be separate by NMF, but easy for k-means
         m1=[4;4];
@@ -46,6 +46,11 @@ switch scene
         m2=[2,0];
         C1=[0,0;0,1];
         C2=[3,0;0,0];
+    case 7 % NMF fail
+        m1=[0,1];
+        m2=[0,0];
+        C1=[0,0;0,1];
+        C2=[3,0;0,0];            
 end
 k = 2;
 N = 300;
@@ -53,8 +58,17 @@ X1 = mvnrnd(m1, C1, N);
 X2 = mvnrnd(m2, C2, N);
 X1 = X1 + randn(size(X1))*0.1;    % adding noise
 X2 = X2 + randn(size(X2))*0.1;    % adding noise
-X1 = abs(X1);
-X2 = abs(X2);
+
+X = [X1;X2];
+% NMF is sensitive to normalization!
+% X = normalize(X);
+X = normalize_v2(X')';
+
+X1 = X(1:N,:);
+X2 = X(N+1:2*N,:);
+
+% X1 = abs(X1);
+% X2 = abs(X2);
 if exist('m3','var'), X3 = mvnrnd(m3, C3, N); end;
 figure(1), clf,
 % grid on
@@ -65,7 +79,6 @@ if exist('X3','var'), plot(X3(:,1),X3(:,2),'g+'); end;
 title('Original data', 'FontSize', 20)
 xlabel('feature1', 'FontSize', 20);
 ylabel('feature2', 'FontSize', 20);
-axis([0 5 0 6]);
 set(gca,'FontSize',20);
 if exist('X3','var')
     legend('class1', 'class2', 'class3');
@@ -119,7 +132,7 @@ fprintf('ALS-cost: %f\n', cost(A,W,H));
 % drawClusters(idx',W',X,N,ii,'CVX')
 % cost(A,W,H)
 %% SNMF
-[W,H,iter,HIS] = nmf(A,k,'type','regularized','nnls_solver','bp','verbose',0,'ALPHA',0,'BETA',1);
+[W,H,iter,HIS] = nmf(A,k,'type','regularized','nnls_solver','bp','verbose',0,'ALPHA',1,'BETA',1);
 [~,idx] = max(H);
 % disp([norm(W,'fro'),norm(H,'fro')]);
 drawClusters(idx',W',X,N,ii,'BP');

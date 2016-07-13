@@ -9,23 +9,25 @@ clc
 
 addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 
-K = 15;
+K = 6;
 J = K;
 
-T = 300;
+T = 100;
 N = 1000;
 
-VALUE_RANGE_D = 3:6;
+VALUE_RANGE_D = 1:3;
 VALUE_VARIANCE = 0.1;
+
 
 %%
 AVG_K_ = zeros(T, K);
 COV_K_ = zeros(T, T, K);
-for i = 1:T
-    k = floor(rand()*K)+1;
-%     k = i;
-    AVG_K_(i,k) = VALUE_RANGE_D(floor(rand()*length(VALUE_RANGE_D))+1);
-    COV_K_(i,i,k) = VALUE_VARIANCE;
+for extra = 1:1
+    for i = 1:T
+        k = floor(rand()*K)+1;
+        AVG_K_(i,k) = VALUE_RANGE_D(floor(rand()*length(VALUE_RANGE_D))+1);
+        COV_K_(i,i,k) = VALUE_VARIANCE;
+    end
 end
 % for k = 1:K
 %     for i = 1:100
@@ -39,27 +41,23 @@ end
 % COV_J_ = COV_K_;
 AVG_J_ = zeros(T, J);
 COV_J_ = zeros(T, T, J);
-for i = 1:T
-    j = floor(rand()*J)+1;
-    AVG_J_(i,j) = VALUE_RANGE_D(floor(rand()*length(VALUE_RANGE_D))+1);
-    COV_J_(i,i,j) = VALUE_VARIANCE;
+for extra = 1:1
+    for i = 1:T
+        j = floor(rand()*J)+1;
+        AVG_J_(i,j) = VALUE_RANGE_D(floor(rand()*length(VALUE_RANGE_D))+1);
+        COV_J_(i,i,j) = VALUE_VARIANCE;
+    end
 end
 
 MRNA = zeros(T, N);
 PROTEIN = zeros(T, N);
-idx_last = 1;
+J_RANGE = randperm(K);
+range = @(K,N,k) floor(N/K*(k-1))+1:floor(N/K*k);
 for k = 1:K
-    num = floor((N-idx_last+1)/(K-k+1));
-    range = idx_last:idx_last+num-1;
-%     MRNA(:, range) = abs(mvnrnd(AVG_K_(:,k)', COV_K_(:,:,k), num)');
-%     PROTEIN(:, range) = abs(mvnrnd(AVG_J_(:,k)', COV_J_(:,:,k), num)');
-    
-    MRNA(:, range) = mvnrnd(AVG_K_(:,k)', COV_K_(:,:,k), num)';
-    PROTEIN(:, range) = mvnrnd(AVG_J_(:,k)', COV_J_(:,:,k), num)';    
-    
-    idx_last = idx_last+num;
+    k_ = J_RANGE(k);
+    MRNA(:, range(K,N,k)) = mvnrnd(AVG_K_(:,k)', COV_K_(:,:,k), length(range(K,N,k)))';
+    PROTEIN(:, range(K,N,k)) = mvnrnd(AVG_J_(:,k_)', COV_J_(:,:,k_), length(range(K,N,k)))';    
 end
-
 
 % Calculate relationship between mRNA and protein
 H1_ORIGINAL = zeros(K, N);
@@ -80,28 +78,46 @@ imagesc(THETA_ORIGINAL);
 title('Real THETA');
 
 
+% permuted !!! important!!! ===================
+% ii = randperm(N);
+% PROTEIN = PROTEIN(:,ii);
+% =============================================
 
 
 % Add noise =============================
-MRNA = MRNA + randn(size(MRNA))*1;
-PROTEIN = PROTEIN + randn(size(PROTEIN))*0.1;
-
-% MRNA = MRNA + randn(size(MRNA))*0.1;
+% MRNA = MRNA + randn(size(MRNA))*2;
 % PROTEIN = PROTEIN + randn(size(PROTEIN))*2;
 
-% MRNA = MRNA + randn(size(MRNA))*1;
+% MRNA = MRNA + randn(size(MRNA))*0.1;
 % PROTEIN = PROTEIN + randn(size(PROTEIN))*1;
+
+% MRNA = MRNA + randn(size(MRNA))*2;
+PROTEIN = PROTEIN + randn(size(PROTEIN))*2;
+
+% MRNA = MRNA + rand(size(MRNA))*2;
+PROTEIN = PROTEIN + rand(size(PROTEIN))*2;
+% 
+% MRNA = MRNA + wgn(size(MRNA,1),size(MRNA,2),1)*1;
+% PROTEIN = PROTEIN + wgn(size(PROTEIN,1),size(PROTEIN,2),1)*1;
+
 % =======================================
 
+
+% MRNA = MRNA-3;
 
 % Normalize original data
 % MRNA = normalize(MRNA);
 % PROTEIN = normalize(PROTEIN);
+% MRNA = normalize_v2(MRNA);
+% PROTEIN = normalize_v2(PROTEIN);
 % PROTEIN_ORIGINAL = PROTEIN;
 % MRNA(MRNA<0) = 0;
 % PROTEIN(PROTEIN<0) = 0;
+% 
 % MRNA = pow2(MRNA);
 % PROTEIN = pow2(PROTEIN);
+% MRNA(MRNA>0.5) = 0;
+% PROTEIN(PROTEIN>0.5) = 0;
 
 
 

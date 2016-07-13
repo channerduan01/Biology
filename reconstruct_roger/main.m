@@ -61,7 +61,7 @@ ClusterAnalysis(ANALYSIS_PROTEIN_CLUSTER_IDX, H1, protein_clusters, MRNA, PROTEI
 %% Roger's Model
 MAX_ITER = 100;
 patience = 1;
-REPEAPT = 100;
+REPEAPT = 2;
 RESULT = cell(REPEAPT,1);
 index = 0;
 error_result_num = 0;
@@ -115,8 +115,9 @@ end
 SELETION_THRESHOLD = 0.8;
 [mrna_clusters, protein_clusters] = CalcuClusterExtent(K, J, N, Q, Q_J, SELETION_THRESHOLD);
 OutputClustersNM(K, J, mrna_clusters, protein_clusters, names);
-ANALYSIS_PROTEIN_CLUSTER_IDX = 12;
-ClusterAnalysis(ANALYSIS_PROTEIN_CLUSTER_IDX, Q, protein_clusters, MRNA, PROTEIN_ORIGINAL);
+ANALYSIS_PROTEIN_CLUSTER_IDX = 2;
+ClusterAnalysis(ANALYSIS_PROTEIN_CLUSTER_IDX, Q, protein_clusters, MRNA, PROTEIN_ORIGINAL, names);
+
 
 
 % %% test2

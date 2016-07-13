@@ -2,7 +2,7 @@
 %
 % init data
 close all
-% clear
+clear
 clc
 
 addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
@@ -16,11 +16,22 @@ PROTEIN_ORIGINAL = P1';
 % different normalization methods, matters a lot!
 % MRNA = normalize(MRNA);
 % PROTEIN = normalize(PROTEIN);
+% MRNA = (MRNA+1)/2;
+% PROTEIN = (PROTEIN+1)/2;
 % MRNA(MRNA<0) = 0;
 % PROTEIN(PROTEIN<0) = 0;
-MRNA = pow2(MRNA);
-PROTEIN = pow2(PROTEIN);
+% MRNA = abs(MRNA);
+% PROTEIN = abs(PROTEIN);
+% MRNA = pow2(MRNA);
+% PROTEIN = pow2(PROTEIN);
+MRNA = normalize_v2(MRNA);
+PROTEIN = normalize_v2(PROTEIN);
+
 % =========================== how to proper normalize ?
+
+% test this crazy idea!!!
+% MRNA = MRNA';
+% PROTEIN = PROTEIN';
 
 [T,N] = size(MRNA);
 
@@ -29,7 +40,7 @@ J = 19;
 
 
 %% Consistency
-REPEAT = 100;
+REPEAT = 1;
 
 IDX_MATRIX_MRNA = zeros(REPEAT, N);
 IDX_MATRIX_PROTEIN = zeros(REPEAT, N);
@@ -39,8 +50,8 @@ i = 0;
 HIS = zeros(REPEAT, 4);
 
 % configuration
-wCoef = 1;
-hCoef = 1;
+wCoef = 2;
+hCoef = 2;
 max_iter = 100;
 
 while true
@@ -51,18 +62,23 @@ while true
     %         [W1,H1,W2,H2,THETA,HIS] = ...
     %             CoNMF(MRNA, PROTEIN, 12, 12, 0.1, 0.01, 0.01, 100, true, 0.01);
     [W1_res,H1_res,W2_res,H2_res,~,HIS,last_iter] = CoNMF_v2_separate(MRNA, PROTEIN, K, J ...
-        , 'MAX_ITER', max_iter, 'MIN_ITER', max_iter, 'verbose', 1 ...
-        , 'W_COEF', wCoef, 'H_COEF', hCoef, 'T_COEF', 1 ...
+        , 'MAX_ITER', max_iter, 'MIN_ITER', max_iter, 'VERBOSE', 1, 'METHOD', 'BP' ...
+        , 'W_COEF', wCoef, 'H_COEF', hCoef, 'T_COEF', 1, 'PATIENCE', 0.01 ...
         );
-    
-    THETA = CalcuTheta(H1_res, H2_res, K, J, N);
-    if sum(sum(isnan(THETA))) > 0
+    Theta = CalcuTheta(H1_res, H2_res, K, J, N);
+%     [W1_res,H1_res,W2_res,H2_res,Theta,HIS,last_iter] = CoNMF_v3_co2(MRNA, PROTEIN, K, J ...
+%         , 'MAX_ITER', max_iter, 'MIN_ITER', max_iter, 'VERBOSE', 1, 'METHOD', 'BP' ...
+%         , 'W_COEF', wCoef, 'H_COEF', hCoef, 'T_COEF', 1, 'PATIENCE', 0.1 ...
+%         );
+%     [W1_res,H1_res,W2_res,H2_res,Theta,HIS,last_iter] = CoNMF_v4_flow(MRNA, PROTEIN, K, J ...
+%         , 'MAX_ITER', max_iter, 'MIN_ITER', max_iter, 'VERBOSE', 1, 'METHOD', 'BP' ...
+%         , 'W_COEF', wCoef, 'H_COEF', hCoef, 'T_COEF', 1, 'PATIENCE', 0.01 ...
+%         );
+
+    if sum(sum(isnan(Theta))) > 0
         err_num = err_num+1;
         i = i - 1;
         continue;
-    end
-    for k = 1:K
-        THETA(k,:) = THETA(k,:)/sum(THETA(k,:));
     end
     %     catch
     %         err_num = err_num+1;
@@ -83,6 +99,18 @@ if REPEAT > 1
         err_num, mrna_consistency, protein_consistency);
 end
 
+% %% trans
+% A = W1_res;
+% for i = 1:size(A,1)
+%     A(i,:) = A(i,:)/sum(A(i,:));
+% end
+% H1_res = A';
+% A = W2_res;
+% for i = 1:size(A,1)
+%     A(i,:) = A(i,:)/sum(A(i,:));
+% end
+% H2_res = A';
+% THETA = CalcuTheta(H1_res, H2_res, K, J, N);
 %% Draw the process of clustering
 % plot(HIS(:,:));
 % set(gca,'FontSize',16);
@@ -103,8 +131,27 @@ SELETION_THRESHOLD = 0.3;
 
 OutputClustersNM(K, J, mrna_clusters, protein_clusters, names);
 ANALYSIS_PROTEIN_CLUSTER_IDX = 10;
-ClusterAnalysis(ANALYSIS_PROTEIN_CLUSTER_IDX, H1_res, protein_clusters, MRNA, PROTEIN);
+ClusterAnalysis(ANALYSIS_PROTEIN_CLUSTER_IDX, H1_res, protein_clusters, MRNA, PROTEIN, names);
 
+
+
+% %% Show the distribution of data source
+% figure();
+% hold on;
+% subplot(121);
+% hist(MRNA(:));
+% set(gca,'FontSize',16);
+% xlabel('express level', 'FontSize', 16);
+% ylabel('quantity', 'FontSize', 16);
+% title('Original MRNA data', 'FontSize', 20);
+% 
+% subplot(122);
+% hist(PROTEIN(:));
+% set(gca,'FontSize',16);
+% xlabel('express level', 'FontSize', 16);
+% ylabel('quantity', 'FontSize', 16);
+% title('Original protein data', 'FontSize', 20);
+% hold off;
 
 
 

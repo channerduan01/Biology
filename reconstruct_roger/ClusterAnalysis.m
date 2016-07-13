@@ -2,13 +2,22 @@
 %   rows number is repeat times,
 %   columns number is items number of basic data
 %
-function ClusterAnalysis(target_cluster_idx, Q, protein_clusters, MRNA, PROTEIN_ORIGINAL)
+function ClusterAnalysis(target_cluster_idx, Q, protein_clusters, MRNA, PROTEIN_ORIGINAL, names)
 gene_idxs = protein_clusters{target_cluster_idx};
 figure();
 hold on;
 subplot(121), imagesc(MRNA(:,gene_idxs)');
 subplot(122), imagesc(PROTEIN_ORIGINAL(:,gene_idxs)');
 hold off;
+
+fprintf('genes ID: ');
+for i = 1:length(gene_idxs)
+    fprintf('%s', names.NM{gene_idxs(i)});
+    if i < length(gene_idxs)
+        fprintf(', ');
+    end
+end
+fprintf('\n');
 
 related_cluster_idxs = zeros(1,length(gene_idxs));
 fprintf('releated mrna clusters: ');

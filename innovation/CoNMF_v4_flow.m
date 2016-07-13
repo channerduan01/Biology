@@ -44,7 +44,7 @@ else
             case 'MIN_ITER',            par.min_iter = varargin{i+1};
             case 'MAX_ITER',            par.max_iter = varargin{i+1};
             case 'VERBOSE',             par.verbose = varargin{i+1};
-            case 'PATIENCE',            par.patience = varargin{i+1};                
+            case 'PATIENCE',            par.patience = varargin{i+1};
             otherwise
                 error(['Unrecognized option: ',varargin{i}]);
         end
@@ -72,6 +72,7 @@ par.zero1N = zeros(1,N);
 par.ones_H_K = sqrt(par.hCoef)*ones(1,K);
 par.ones_H_J = sqrt(par.hCoef)*ones(1,J);
 
+
 % main process start
 HIS = zeros(par.max_iter+1, 4);
 record = calcuCost(V1,W1,H1,V2,W2,H2,THETA1,THETA2);
@@ -83,33 +84,26 @@ HIS(1, :) = record;
 last_cost = sum(record);
 for last_iter = 1:par.max_iter
     
-    % first
-    W1 = updateW(V1,W1,H1,par,1);
-    H2 = H2 + par.tCoef*(H1'*THETA1)';
-%     H2 = H2.*(H1'*THETA1)';
-    H2 = normalizeColumn(H2);
-    W2 = updateW(V2,W2,H2,par,2);
-    
-    % second
+    % simple flow start
     H1 = updateH(V1,W1,H1,par,1);
     H1 = normalizeColumn(H1);
     H2 = updateH(V2,W2,H2,par,2);
     H2 = normalizeColumn(H2);
-    [C, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);
+    [~, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);   
     
-    % third
-    W2 = updateW(V2,W2,H2,par,2);
-    H1 = H1 + par.tCoef*(H2'*THETA2)';
-%     H1 = H1.*(H2'*THETA2)';
-    H1 = normalizeColumn(H1);
+    % exchange flow
+%     WaveForH2 = (H1'*THETA1)';
+%     WaveForH1 = (H2'*THETA2)';
+%     H2 = H2 + par.tCoef*WaveForH2;
+%     H2 = normalizeColumn(H2);
+%     H1 = H1 + par.tCoef*WaveForH1;
+%     H1 = normalizeColumn(H1);   
+%     [~, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);
+    
+    
+    % flow back
     W1 = updateW(V1,W1,H1,par,1);
-    
-    % fourth
-    H1 = updateH(V1,W1,H1,par,1);
-    H1 = normalizeColumn(H1);
-    H2 = updateH(V2,W2,H2,par,2);
-    H2 = normalizeColumn(H2);
-    [C, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);    
+    W2 = updateW(V2,W2,H2,par,2);
     
     
     % check results
@@ -133,6 +127,7 @@ end
 
 function [C, tk, tj] = updateTheta(H1, H2, K, J, N)
 C = H1*H2';
+C = C ./ N;
 tk = zeros(K,J);
 tj = zeros(J,K);
 PI_K_ = sum(H1,2)/N;
@@ -143,8 +138,8 @@ end
 for k = 1:K
     tj(:,k) = C(k,:)./PI_J_';
 end
-tk = tk ./ N;
-tj = tj ./ N;
+tk(isnan(tk)) = 0;
+tj(isnan(tj)) = 0;
 end
 
 function record = calcuCost(V1,W1,H1,V2,W2,H2,THETA1,THETA2)
@@ -154,13 +149,6 @@ b = cost(V2,W2,H2);
 c = norm((H1'*THETA1)'-H2,'fro');
 d = norm((H2'*THETA2)'-H1,'fro');
 record = [a b c d];
-end
-
-function A = normalizeRow(A)
-for i = 1:size(A,1)
-    A(i,:) = A(i,:)/sum(A(i,:));
-end
-A(A<0) = 0;
 end
 
 function A = normalizeColumn(A)
@@ -226,7 +214,8 @@ end
 end
 
 function [X,grad,iter] = nnlsm(A,B,init)
-[X,grad,iter] = nnlsm_blockpivot(A,B,0,init);
+% [X,grad,iter] = nnlsm_blockpivot(A,B,0,init);
+[X,grad,iter] = nnlsm_activeset(A,B,1,0,init);
 end
 
 function H = updateH_MU(V,W,H,coef)
