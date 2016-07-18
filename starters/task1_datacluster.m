@@ -121,16 +121,10 @@ fprintf('k-means-cost: %f\n', cost(A,W,H));
 drawClusters(idx',W',X,N,ii,'MU');
 fprintf('MU-cost: %f\n', cost(A,W,H));
 %% ALS
-% [W,H,~] = mynmf(A,k,'METHOD','MU','verbose',0,'ALPHA',10,'BETA',1,'W_INIT',eye(k),'H_INIT',A);
-[W,H,~] = mynmf(A,k,'METHOD','MU','verbose',0,'ALPHA',1,'BETA',1);
+[W,H,~] = mynmf(A,k,'METHOD','ALS','verbose',0,'ALPHA',1,'BETA',1);
 [~,idx] = max(H);
 drawClusters(idx',W',X,N,ii,'ALS');
 fprintf('ALS-cost: %f\n', cost(A,W,H));
-%% CVX
-% [W,H,~] = mynmf(A,k,'METHOD','CVX','verbose',1,'MAX_ITER',20);
-% [~,idx] = max(H);
-% drawClusters(idx',W',X,N,ii,'CVX')
-% cost(A,W,H)
 %% SNMF
 [W,H,iter,HIS] = nmf(A,k,'type','regularized','nnls_solver','bp','verbose',0,'ALPHA',1,'BETA',1);
 [~,idx] = max(H);

@@ -30,8 +30,8 @@ PROTEIN = normalize_v2(PROTEIN);
 % =========================== how to proper normalize ?
 
 % test this crazy idea!!!
-% MRNA = MRNA';
-% PROTEIN = PROTEIN';
+MRNA = MRNA';
+PROTEIN = PROTEIN';
 
 [T,N] = size(MRNA);
 
@@ -40,18 +40,18 @@ J = 19;
 
 
 %% Consistency
-REPEAT = 1;
-
-IDX_MATRIX_MRNA = zeros(REPEAT, N);
-IDX_MATRIX_PROTEIN = zeros(REPEAT, N);
-
+REPEAT = 2;
+% trcks! =============
+IDX_MATRIX_MRNA = zeros(REPEAT, T);
+IDX_MATRIX_PROTEIN = zeros(REPEAT, T);
+% ====================
 err_num = 0;
 i = 0;
 HIS = zeros(REPEAT, 4);
 
 % configuration
-wCoef = 2;
-hCoef = 2;
+wCoef = 1;
+hCoef = 1;
 max_iter = 100;
 
 while true
@@ -71,7 +71,7 @@ while true
 %         , 'W_COEF', wCoef, 'H_COEF', hCoef, 'T_COEF', 1, 'PATIENCE', 0.1 ...
 %         );
 %     [W1_res,H1_res,W2_res,H2_res,Theta,HIS,last_iter] = CoNMF_v4_flow(MRNA, PROTEIN, K, J ...
-%         , 'MAX_ITER', max_iter, 'MIN_ITER', max_iter, 'VERBOSE', 1, 'METHOD', 'BP' ...
+%         , 'MAX_ITER', max_iter, 'MIN_ITER', max_iter, 'VERBOSE', 1, 'METHOD', 'ALS' ...
 %         , 'W_COEF', wCoef, 'H_COEF', hCoef, 'T_COEF', 1, 'PATIENCE', 0.01 ...
 %         );
 
@@ -86,11 +86,23 @@ while true
     %         continue;
     %     end
     
-    [~, idx] = max(H1_res);
+%     [~, idx] = max(H1_res);
+%     IDX_MATRIX_MRNA(i,:) = idx;
+%     [~, idx] = max(H2_res);
+%     IDX_MATRIX_PROTEIN(i,:) = idx;
+% trcks! =============    
+    [~, idx] = max(W1_res,[],2);
     IDX_MATRIX_MRNA(i,:) = idx;
-    [~, idx] = max(H2_res);
-    IDX_MATRIX_PROTEIN(i,:) = idx;
+    [~, idx] = max(W2_res,[],2);
+    IDX_MATRIX_PROTEIN(i,:) = idx;    
+% ====================
 end
+
+% trcks! =============
+H1_res = W1_res';
+H2_res = W2_res';
+N = T;
+% ====================
 
 if REPEAT > 1
     [mrna_consistency,mrna_C] = CalcuConsistency(IDX_MATRIX_MRNA);
@@ -126,7 +138,7 @@ for i = 1:N
     H2_res(:,i) = H2_res(:,i)/sum(H2_res(:,i));
 end
 
-SELETION_THRESHOLD = 0.3;
+SELETION_THRESHOLD = 0.2;
 [mrna_clusters, protein_clusters] = CalcuClusterExtent(K, J, N, H1_res, H2_res, SELETION_THRESHOLD);
 
 OutputClustersNM(K, J, mrna_clusters, protein_clusters, names);

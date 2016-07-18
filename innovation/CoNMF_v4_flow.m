@@ -86,19 +86,19 @@ for last_iter = 1:par.max_iter
     
     % simple flow start
     H1 = updateH(V1,W1,H1,par,1);
-    H1 = normalizeColumn(H1);
     H2 = updateH(V2,W2,H2,par,2);
-    H2 = normalizeColumn(H2);
     [~, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);   
     
     % exchange flow
-%     WaveForH2 = (H1'*THETA1)';
-%     WaveForH1 = (H2'*THETA2)';
-%     H2 = H2 + par.tCoef*WaveForH2;
-%     H2 = normalizeColumn(H2);
-%     H1 = H1 + par.tCoef*WaveForH1;
-%     H1 = normalizeColumn(H1);   
-%     [~, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);
+    WaveForH2 = (H1'*THETA1)';
+    WaveForH1 = (H2'*THETA2)';
+    H2 = (1-par.tCoef)*H2 + par.tCoef*WaveForH2.*H2;
+    H1 = (1-par.tCoef)*H1 + par.tCoef*WaveForH1.*H1;
+
+%     H2 = WaveForH2.*H2;
+%     H1 = WaveForH1.*H1;    
+    
+    [~, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);
     
     
     % flow back
@@ -124,8 +124,25 @@ end
 %------------------------------------------------------------------------------------------------------------------------
 %                                    Utility Functions
 %------------------------------------------------------------------------------------------------------------------------
+function A = normalizeRow(A)
+for i = 1:size(A,1)
+    A(i,:) = A(i,:)/sum(A(i,:));
+end
+A(A<0) = 0;
+end
+
+function A = normalizeColumn(A)
+for i = 1:size(A,2)
+    sum_ = sum(A(:,i));
+    if sum_ < 0.999 || sum_ > 1.001
+        A(:,i) = A(:,i)/sum(A(:,i));
+    end
+end
+end
 
 function [C, tk, tj] = updateTheta(H1, H2, K, J, N)
+H1 = normalizeColumn(H1);
+H2 = normalizeColumn(H2);
 C = H1*H2';
 C = C ./ N;
 tk = zeros(K,J);
@@ -149,15 +166,6 @@ b = cost(V2,W2,H2);
 c = norm((H1'*THETA1)'-H2,'fro');
 d = norm((H2'*THETA2)'-H1,'fro');
 record = [a b c d];
-end
-
-function A = normalizeColumn(A)
-for i = 1:size(A,2)
-    sum_ = sum(A(:,i));
-    if sum_ < 0.999 || sum_ > 1.001
-        A(:,i) = A(:,i)/sum(A(:,i));
-    end
-end
 end
 
 

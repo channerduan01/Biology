@@ -90,9 +90,7 @@ for last_iter = 1:par.max_iter
     
     
     H1 = updateH(V1,W1,H1,par,1);
-    H1 = normalizeColumn(H1);
     H2 = updateH(V2,W2,H2,par,2);
-    H2 = normalizeColumn(H2);
     
     W1 = updateW(V1,W1,H1,par,1);
     W2 = updateW(V2,W2,H2,par,2);
@@ -123,15 +121,6 @@ b = cost(V2,W2,H2);
 c = 0;
 d = 0;
 record = [a b c d];
-end
-
-function A = normalizeColumn(A)
-for i = 1:size(A,2)
-    sum_ = sum(A(:,i));
-    if sum_ < 0.999 || sum_ > 1.001
-        A(:,i) = A(:,i)/sum(A(:,i));
-    end
-end
 end
 
 function H = updateH(V,W,H,par,idx)

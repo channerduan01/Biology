@@ -85,30 +85,28 @@ for last_iter = 1:par.max_iter
     
     % first
     W1 = updateW(V1,W1,H1,par,1);
-    H2 = H2 + par.tCoef*(H1'*THETA1)';
+%     H2 = H2 + par.tCoef*(H1'*THETA1)';
 %     H2 = H2.*(H1'*THETA1)';
-    H2 = normalizeColumn(H2);
+    H2 = (1-par.tCoef)*H2 + par.tCoef*(H1'*THETA1)'.*H2;
+    
+
     W2 = updateW(V2,W2,H2,par,2);
     
     % second
     H1 = updateH(V1,W1,H1,par,1);
-    H1 = normalizeColumn(H1);
     H2 = updateH(V2,W2,H2,par,2);
-    H2 = normalizeColumn(H2);
     [C, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);
     
     % third
     W2 = updateW(V2,W2,H2,par,2);
-    H1 = H1 + par.tCoef*(H2'*THETA2)';
+%     H1 = H1 + par.tCoef*(H2'*THETA2)';
 %     H1 = H1.*(H2'*THETA2)';
-    H1 = normalizeColumn(H1);
+    H1 = (1-par.tCoef)*H1 + par.tCoef*(H2'*THETA2)'.*H1;
     W1 = updateW(V1,W1,H1,par,1);
     
     % fourth
     H1 = updateH(V1,W1,H1,par,1);
-    H1 = normalizeColumn(H1);
     H2 = updateH(V2,W2,H2,par,2);
-    H2 = normalizeColumn(H2);
     [C, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);    
     
     
@@ -130,32 +128,6 @@ end
 %------------------------------------------------------------------------------------------------------------------------
 %                                    Utility Functions
 %------------------------------------------------------------------------------------------------------------------------
-
-function [C, tk, tj] = updateTheta(H1, H2, K, J, N)
-C = H1*H2';
-tk = zeros(K,J);
-tj = zeros(J,K);
-PI_K_ = sum(H1,2)/N;
-PI_J_ = sum(H2,2)/N;
-for j = 1:J
-    tk(:,j) = C(:,j)./PI_K_;
-end
-for k = 1:K
-    tj(:,k) = C(k,:)./PI_J_';
-end
-tk = tk ./ N;
-tj = tj ./ N;
-end
-
-function record = calcuCost(V1,W1,H1,V2,W2,H2,THETA1,THETA2)
-cost = @(V,W,H) sqrt(sum(sum((V-W*H).^2)));
-a = cost(V1,W1,H1);
-b = cost(V2,W2,H2);
-c = norm((H1'*THETA1)'-H2,'fro');
-d = norm((H2'*THETA2)'-H1,'fro');
-record = [a b c d];
-end
-
 function A = normalizeRow(A)
 for i = 1:size(A,1)
     A(i,:) = A(i,:)/sum(A(i,:));
@@ -172,6 +144,34 @@ for i = 1:size(A,2)
 end
 end
 
+function [C, tk, tj] = updateTheta(H1, H2, K, J, N)
+H1 = normalizeColumn(H1);
+H2 = normalizeColumn(H2);
+C = H1*H2';
+C = C ./ N;
+tk = zeros(K,J);
+tj = zeros(J,K);
+PI_K_ = sum(H1,2)/N;
+PI_J_ = sum(H2,2)/N;
+for j = 1:J
+    tk(:,j) = C(:,j)./PI_K_;
+end
+for k = 1:K
+    tj(:,k) = C(k,:)./PI_J_';
+end
+tk(isnan(tk)) = 0;
+tj(isnan(tj)) = 0;
+end
+
+
+function record = calcuCost(V1,W1,H1,V2,W2,H2,THETA1,THETA2)
+cost = @(V,W,H) sqrt(sum(sum((V-W*H).^2)));
+a = cost(V1,W1,H1);
+b = cost(V2,W2,H2);
+c = norm((H1'*THETA1)'-H2,'fro');
+d = norm((H2'*THETA2)'-H1,'fro');
+record = [a b c d];
+end
 
 function H = updateH(V,W,H,par,idx)
 if strcmp(par.method,'MU')

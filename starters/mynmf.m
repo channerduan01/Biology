@@ -19,11 +19,6 @@ par.verbose = 0;
 
 W = rand(m,k);
 H = rand(k,n);
-% only for test ===================================
-for i = 1:n
-    H(:,i) = H(:,i)/sum(H(:,i));
-end
-% =================================================
 
 test_count = 0;
 
@@ -76,12 +71,6 @@ for iter=1:par.max_iter
         case 'MU'
             %     H = H .* (W'*A)./(W'*W*H + b*ones(r)*H + eps);
             H = H .* (W'*A)./(W'*W*H + par.beta*H + eps);
-            % only for test ===================================
-            for i = 1:n
-                H(:,i) = H(:,i) + (1-sum(H(:,i)))/length(H(:,i));
-            end
-            H(H<0) = 0;
-            % =================================================
             W = W .* (A*H')./(W*H*H' + par.alpha*W + eps);
         case 'ALS'
             H = pinv(W'*W+par.beta*eye(k))*(W'*A);
@@ -143,5 +132,14 @@ end
 function [gradW,gradH] = getGradient(A,W,H,alpha,beta)
 gradW = W*(H*H') - A*H' + alpha*W;
 gradH = (W'*W)*H - W'*A + beta*H;
+end
+
+function A = normalizeColumn(A)
+for i = 1:size(A,2)
+    sum_ = sum(A(:,i));
+    if sum_ < 0.999 || sum_ > 1.001
+        A(:,i) = A(:,i)/sum(A(:,i));
+    end
+end
 end
 

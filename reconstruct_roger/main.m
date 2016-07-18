@@ -51,11 +51,11 @@ end
 fprintf('mrna consistency: %f, protein consistency: %f\n', mrna_consistency, protein_consistency);
 
 %% Single Analysis
-SELETION_THRESHOLD = 0.3;
+SELETION_THRESHOLD = 0.5;
 [mrna_clusters, protein_clusters] = CalcuClusterExtent(K, J, N, H1, H2, SELETION_THRESHOLD);
 OutputClustersNM(K, J, mrna_clusters, protein_clusters, names);
 ANALYSIS_PROTEIN_CLUSTER_IDX = 10;
-ClusterAnalysis(ANALYSIS_PROTEIN_CLUSTER_IDX, H1, protein_clusters, MRNA, PROTEIN_ORIGINAL);
+ClusterAnalysis(ANALYSIS_PROTEIN_CLUSTER_IDX, H1, protein_clusters, MRNA, PROTEIN_ORIGINAL, names);
 
 
 %% Roger's Model

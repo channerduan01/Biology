@@ -16,7 +16,7 @@ T = 100;
 N = 1000;
 
 VALUE_RANGE_D = 1:3;
-VALUE_VARIANCE = 0.1;
+VALUE_VARIANCE = 0.5;
 
 
 %%
@@ -92,11 +92,11 @@ title('Real THETA');
 % PROTEIN = PROTEIN + randn(size(PROTEIN))*1;
 
 % MRNA = MRNA + randn(size(MRNA))*2;
-PROTEIN = PROTEIN + randn(size(PROTEIN))*2;
+PROTEIN = PROTEIN + randn(size(PROTEIN))*1;
 
 % MRNA = MRNA + rand(size(MRNA))*2;
-PROTEIN = PROTEIN + rand(size(PROTEIN))*2;
-% 
+PROTEIN = PROTEIN + rand(size(PROTEIN))*6;
+
 % MRNA = MRNA + wgn(size(MRNA,1),size(MRNA,2),1)*1;
 % PROTEIN = PROTEIN + wgn(size(PROTEIN,1),size(PROTEIN,2),1)*1;
 
