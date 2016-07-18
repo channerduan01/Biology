@@ -29,9 +29,12 @@ PROTEIN = normalize_v2(PROTEIN);
 
 % =========================== how to proper normalize ?
 
+
+% trcks! =============
 % test this crazy idea!!!
-MRNA = MRNA';
-PROTEIN = PROTEIN';
+% MRNA = MRNA';
+% PROTEIN = PROTEIN';
+% ====================
 
 [T,N] = size(MRNA);
 
@@ -40,10 +43,12 @@ J = 19;
 
 
 %% Consistency
-REPEAT = 2;
+REPEAT = 20;
+IDX_MATRIX_MRNA = zeros(REPEAT, N);
+IDX_MATRIX_PROTEIN = zeros(REPEAT, N);
 % trcks! =============
-IDX_MATRIX_MRNA = zeros(REPEAT, T);
-IDX_MATRIX_PROTEIN = zeros(REPEAT, T);
+% IDX_MATRIX_MRNA = zeros(REPEAT, T);
+% IDX_MATRIX_PROTEIN = zeros(REPEAT, T);
 % ====================
 err_num = 0;
 i = 0;
@@ -61,19 +66,19 @@ while true
     %     try
     %         [W1,H1,W2,H2,THETA,HIS] = ...
     %             CoNMF(MRNA, PROTEIN, 12, 12, 0.1, 0.01, 0.01, 100, true, 0.01);
-    [W1_res,H1_res,W2_res,H2_res,~,HIS,last_iter] = CoNMF_v2_separate(MRNA, PROTEIN, K, J ...
-        , 'MAX_ITER', max_iter, 'MIN_ITER', max_iter, 'VERBOSE', 1, 'METHOD', 'BP' ...
-        , 'W_COEF', wCoef, 'H_COEF', hCoef, 'T_COEF', 1, 'PATIENCE', 0.01 ...
-        );
-    Theta = CalcuTheta(H1_res, H2_res, K, J, N);
+%     [W1_res,H1_res,W2_res,H2_res,~,HIS,last_iter] = CoNMF_v2_separate(MRNA, PROTEIN, K, J ...
+%         , 'MAX_ITER', max_iter, 'MIN_ITER', max_iter, 'VERBOSE', 1, 'METHOD', 'BP' ...
+%         , 'W_COEF', wCoef, 'H_COEF', hCoef, 'T_COEF', 1, 'PATIENCE', 0.001 ...
+%         );
+%     Theta = CalcuTheta(H1_res, H2_res, K, J, N);
 %     [W1_res,H1_res,W2_res,H2_res,Theta,HIS,last_iter] = CoNMF_v3_co2(MRNA, PROTEIN, K, J ...
 %         , 'MAX_ITER', max_iter, 'MIN_ITER', max_iter, 'VERBOSE', 1, 'METHOD', 'BP' ...
-%         , 'W_COEF', wCoef, 'H_COEF', hCoef, 'T_COEF', 1, 'PATIENCE', 0.1 ...
+%         , 'W_COEF', wCoef, 'H_COEF', hCoef, 'T_COEF', 0.5, 'PATIENCE', 0.001 ...
 %         );
-%     [W1_res,H1_res,W2_res,H2_res,Theta,HIS,last_iter] = CoNMF_v4_flow(MRNA, PROTEIN, K, J ...
-%         , 'MAX_ITER', max_iter, 'MIN_ITER', max_iter, 'VERBOSE', 1, 'METHOD', 'ALS' ...
-%         , 'W_COEF', wCoef, 'H_COEF', hCoef, 'T_COEF', 1, 'PATIENCE', 0.01 ...
-%         );
+    [W1_res,H1_res,W2_res,H2_res,Theta,HIS,last_iter] = CoNMF_v4_flow(MRNA, PROTEIN, K, J ...
+        , 'MAX_ITER', max_iter, 'MIN_ITER', max_iter, 'VERBOSE', 1, 'METHOD', 'BP' ...
+        , 'W_COEF', wCoef, 'H_COEF', hCoef, 'T_COEF', 0.8, 'PATIENCE', 0.01 ...
+        );
 
     if sum(sum(isnan(Theta))) > 0
         err_num = err_num+1;
@@ -86,22 +91,22 @@ while true
     %         continue;
     %     end
     
-%     [~, idx] = max(H1_res);
-%     IDX_MATRIX_MRNA(i,:) = idx;
-%     [~, idx] = max(H2_res);
-%     IDX_MATRIX_PROTEIN(i,:) = idx;
-% trcks! =============    
-    [~, idx] = max(W1_res,[],2);
+    [~, idx] = max(H1_res);
     IDX_MATRIX_MRNA(i,:) = idx;
-    [~, idx] = max(W2_res,[],2);
-    IDX_MATRIX_PROTEIN(i,:) = idx;    
+    [~, idx] = max(H2_res);
+    IDX_MATRIX_PROTEIN(i,:) = idx;
+% trcks! =============    
+%     [~, idx] = max(W1_res,[],2);
+%     IDX_MATRIX_MRNA(i,:) = idx;
+%     [~, idx] = max(W2_res,[],2);
+%     IDX_MATRIX_PROTEIN(i,:) = idx;    
 % ====================
 end
 
 % trcks! =============
-H1_res = W1_res';
-H2_res = W2_res';
-N = T;
+% H1_res = W1_res';
+% H2_res = W2_res';
+% N = T;
 % ====================
 
 if REPEAT > 1
@@ -138,11 +143,11 @@ for i = 1:N
     H2_res(:,i) = H2_res(:,i)/sum(H2_res(:,i));
 end
 
-SELETION_THRESHOLD = 0.2;
+SELETION_THRESHOLD = 0.5;
 [mrna_clusters, protein_clusters] = CalcuClusterExtent(K, J, N, H1_res, H2_res, SELETION_THRESHOLD);
 
 OutputClustersNM(K, J, mrna_clusters, protein_clusters, names);
-ANALYSIS_PROTEIN_CLUSTER_IDX = 10;
+ANALYSIS_PROTEIN_CLUSTER_IDX = 19;
 ClusterAnalysis(ANALYSIS_PROTEIN_CLUSTER_IDX, H1_res, protein_clusters, MRNA, PROTEIN, names);
 
 
