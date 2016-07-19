@@ -95,7 +95,7 @@ for last_iter = 1:par.max_iter
     W1 = updateW(V1,W1,H1,par,1);
 %     H2 = H2 + par.tCoef*(H1'*THETA1)';
 %     H2 = H2.*(H1'*THETA1)';
-    H2 = (1-par.tCoef)*H2 + par.tCoef*(H1'*THETA1)'.*H2;
+    H2 = (1-par.tCoef)*H2 + par.tCoef* normalizeColumn((H1'*THETA1)') .*H2;
     
 
     W2 = updateW(V2,W2,H2,par,2);
@@ -109,7 +109,7 @@ for last_iter = 1:par.max_iter
     W2 = updateW(V2,W2,H2,par,2);
 %     H1 = H1 + par.tCoef*(H2'*THETA2)';
 %     H1 = H1.*(H2'*THETA2)';
-    H1 = (1-par.tCoef)*H1 + par.tCoef*(H2'*THETA2)'.*H1;
+    H1 = (1-par.tCoef)*H1 + par.tCoef* normalizeColumn((H2'*THETA2)') .*H1;
     W1 = updateW(V1,W1,H1,par,1);
     
     % fourth

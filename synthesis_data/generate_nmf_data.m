@@ -12,7 +12,7 @@ addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 K = 6;
 J = K;
 
-T = 100;
+T = 50;
 N = 1000;
 
 VALUE_RANGE_D = 1:3;
@@ -91,16 +91,15 @@ title('Real THETA');
 % MRNA = MRNA + randn(size(MRNA))*0.1;
 % PROTEIN = PROTEIN + randn(size(PROTEIN))*1;
 
-% MRNA = MRNA + randn(size(MRNA))*2;
-PROTEIN = PROTEIN + randn(size(PROTEIN))*2;
+MRNA = MRNA + randn(size(MRNA))*0.2;
+PROTEIN = PROTEIN + randn(size(PROTEIN))*3;
 
-MRNA = MRNA + rand(size(MRNA))*2;
-PROTEIN = PROTEIN + rand(size(PROTEIN))*6;
+% MRNA = MRNA + rand(size(MRNA))*2;
+PROTEIN = PROTEIN + rand(size(PROTEIN))*3;
 
 % MRNA = MRNA + wgn(size(MRNA,1),size(MRNA,2),1)*1;
 % PROTEIN = PROTEIN + wgn(size(PROTEIN,1),size(PROTEIN,2),1)*1;
 
-THETA_ORIGINAL = CalcuTheta(H1_ORIGINAL, H2_ORIGINAL, K, J, N);
 % =======================================
 
 

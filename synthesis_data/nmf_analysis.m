@@ -7,17 +7,17 @@ addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 
 
 
-method = 'SBP';
+method = 'BP';
 w_coef = 2;
 h_coef = 2;
-t_coef = 0.5;
-max_iter = 80;
-min_iter = 80;
+t_coef = 1;
+max_iter = 100;
+min_iter = 100;
 
 
-REPEAT_NUM = 100;
+REPEAT_NUM = 5;
 RESULT_TABLE = zeros(REPEAT_NUM, 4*3);
-
+iter_used = zeros(REPEAT_NUM, 3);
 
 IDX_MATRIX_MRNA = zeros(2, N);
 IDX_MATRIX_PROTEIN = zeros(2, N);
@@ -70,15 +70,20 @@ tic
 index_ = 3;
 [W1,H1,W2,H2,~,HIS,last_iter] = ...
     CoNMF_v2_separate(MRNA, PROTEIN, K, J ...
+    , 'PATIENCE', 0.005 ...
     , 'W_COEF', w_coef, 'H_COEF', h_coef, 'T_COEF', t_coef ...
     , 'VERBOSE', 0, 'METHOD', method ...
     , 'MIN_ITER', min_iter, 'MAX_ITER', max_iter ...
     );
+iter_used(REPEAT_TIME, 1) = iter_used(REPEAT_TIME, 1) + last_iter;
 THETA2 = CalcuTheta(H1, H2, K, J, N);
 [~, idx1] = max(H1);
 IDX_MATRIX_MRNA(index_,:) = idx1;
 [~, idx2] = max(H2);
 IDX_MATRIX_PROTEIN(index_,:) = idx2;
+
+
+
 % recover THETA to original order!
 THETA2 = ArrangeTheta(IDX_MATRIX_MRNA(1,:), idx1, IDX_MATRIX_PROTEIN(1,:), idx2, THETA2, K, J);
 [mrna_correct,mrna_C2] = CalcuConsistency(IDX_MATRIX_MRNA([1,index_],:));
@@ -102,6 +107,7 @@ index_ = 4;
     , 'VERBOSE', 0, 'METHOD', method ...
     , 'MIN_ITER', min_iter, 'MAX_ITER', max_iter ...
     );
+iter_used(REPEAT_TIME, 2) = iter_used(REPEAT_TIME, 2) + last_iter;
 [~, idx1] = max(H1);
 IDX_MATRIX_MRNA(index_,:) = idx1;
 [~, idx2] = max(H2);
@@ -119,19 +125,13 @@ toc
 %% SNMF innovative model, flow model
 tic
 index_ = 5;
-[W1,H1,W2,H2,~,HIS,last_iter] = ...
+[W1,H1,W2,H2,THETA4,HIS,last_iter] = ...
     CoNMF_v4_flow(MRNA, PROTEIN, K, J ...
     , 'W_COEF', w_coef, 'H_COEF', h_coef, 'T_COEF', t_coef ...
     , 'VERBOSE', 0, 'METHOD', method ...
     , 'MIN_ITER', min_iter, 'MAX_ITER', max_iter ...
     );
-% [W1,H1,W2,H2,~,HIS,last_iter] = ...
-%     CoNMF_v2_separate(MRNA, PROTEIN, K, J ...
-%     , 'W_COEF', 2, 'H_COEF', 2, 'T_COEF', 1 ...
-%     , 'VERBOSE', 0, 'METHOD', method ...
-%     );
-THETA4 = CalcuTheta(H1, H2, K, J, N);
-
+iter_used(REPEAT_TIME, 3) = iter_used(REPEAT_TIME, 3) + last_iter;
 [~, idx1] = max(H1);
 IDX_MATRIX_MRNA(index_,:) = idx1;
 [~, idx2] = max(H2);
@@ -147,6 +147,7 @@ RESULT_TABLE(REPEAT_TIME, 10:12) = [theta_error, mrna_correct, protein_correct];
 toc
 
 end
+
 %% compare the patterns
 figure();
 set(gca,'FontSize',16);

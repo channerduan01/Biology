@@ -96,8 +96,14 @@ for last_iter = 1:par.max_iter
     [~, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);
     
     % exchange flow
-    WaveForH2 = (H1'*THETA1)';
-    WaveForH1 = (H2'*THETA2)';
+    WaveForH2 = normalizeColumn((H1'*THETA1)');
+    WaveForH1 = normalizeColumn((H2'*THETA2)');
+    % test ======
+%     WaveForH2 = zeros(size(WaveForH2));
+%     WaveForH1 = zeros(size(WaveForH1));
+%     WaveForH2 = 2* ones(size(WaveForH2));
+%     WaveForH1 = 2* ones(size(WaveForH1));
+    % ===========
     H2 = (1-par.tCoef)*H2 + par.tCoef*WaveForH2.*H2;
     H1 = (1-par.tCoef)*H1 + par.tCoef*WaveForH1.*H1;
     [~, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);
