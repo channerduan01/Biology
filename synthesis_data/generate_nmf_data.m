@@ -92,14 +92,15 @@ title('Real THETA');
 % PROTEIN = PROTEIN + randn(size(PROTEIN))*1;
 
 % MRNA = MRNA + randn(size(MRNA))*2;
-PROTEIN = PROTEIN + randn(size(PROTEIN))*1;
+PROTEIN = PROTEIN + randn(size(PROTEIN))*2;
 
-% MRNA = MRNA + rand(size(MRNA))*2;
+MRNA = MRNA + rand(size(MRNA))*2;
 PROTEIN = PROTEIN + rand(size(PROTEIN))*6;
 
 % MRNA = MRNA + wgn(size(MRNA,1),size(MRNA,2),1)*1;
 % PROTEIN = PROTEIN + wgn(size(PROTEIN,1),size(PROTEIN,2),1)*1;
 
+THETA_ORIGINAL = CalcuTheta(H1_ORIGINAL, H2_ORIGINAL, K, J, N);
 % =======================================
 
 

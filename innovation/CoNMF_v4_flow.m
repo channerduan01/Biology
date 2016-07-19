@@ -1,8 +1,7 @@
 %%
-% This is an intermediate product of the final algorithm
-% This algorithm does not consider coupled connnection! So THETA does not
-% work.
-function [W1,H1,W2,H2,THETA1,HIS,last_iter] = CoNMF_v3_co2(MRNA, PROTEIN, K, J, varargin)
+% Final version of my work!!!
+%
+function [W1,H1,W2,H2,THETA1,HIS,last_iter] = CoNMF_v4_flow(MRNA, PROTEIN, K, J, varargin)
 
 % default values of parameters
 par.method = 'MU';
@@ -15,13 +14,17 @@ par.verbose = 0;
 par.patience = 0.1;
 
 % init
-[T,N] = size(MRNA);
+[T1,N] = size(MRNA);
+[T2,N2] = size(PROTEIN);
+if N ~= N2
+   error('Two dataset should share the same N'); 
+end
 V1 = MRNA;
 V2 = PROTEIN;
 
-W1 = rand(T,K);
+W1 = rand(T1,K);
 H1 = rand(K,N);
-W2 = rand(T,J);
+W2 = rand(T2,J);
 H2 = rand(J,N);
 
 % Key params, my coupled matrix
@@ -53,7 +56,9 @@ end
 if ~strcmp(par.method,'MU') ...
         && ~strcmp(par.method,'ALS') ...
         && ~strcmp(par.method,'BP') ...
-        && ~strcmp(par.method,'SBP')
+        && ~strcmp(par.method,'SBP') ...
+        && ~strcmp(par.method,'AS') ...
+        && ~strcmp(par.method,'SAS')
     error('Unrecognized method: use ''MU'' or ''ALS'' or ''BP'' or ''SBP''.');
 end
 
@@ -64,14 +69,15 @@ par.eye_W_J = sqrt(par.wCoef)*eye(J);
 par.eye_H_J = sqrt(par.hCoef)*eye(J);
 
 par.zeroKN = zeros(K,N);
-par.zeroKT = zeros(K,T);
+par.zeroKT1 = zeros(K,T1);
+par.zeroKT2 = zeros(K,T2);
 par.zeroJN = zeros(J,N);
-par.zeroJT = zeros(J,T);
+par.zeroJT1 = zeros(J,T1);
+par.zeroJT2 = zeros(J,T2);
 par.zero1N = zeros(1,N);
 
 par.ones_H_K = sqrt(par.hCoef)*ones(1,K);
 par.ones_H_J = sqrt(par.hCoef)*ones(1,J);
-
 
 % main process start
 HIS = zeros(par.max_iter+1, 4);
@@ -83,28 +89,22 @@ end
 HIS(1, :) = record;
 last_cost = sum(record);
 for last_iter = 1:par.max_iter
-    
+
     % simple flow start
     H1 = updateH(V1,W1,H1,par,1);
     H2 = updateH(V2,W2,H2,par,2);
-    [~, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);   
+    [~, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);
     
     % exchange flow
     WaveForH2 = (H1'*THETA1)';
     WaveForH1 = (H2'*THETA2)';
     H2 = (1-par.tCoef)*H2 + par.tCoef*WaveForH2.*H2;
     H1 = (1-par.tCoef)*H1 + par.tCoef*WaveForH1.*H1;
-
-%     H2 = WaveForH2.*H2;
-%     H1 = WaveForH1.*H1;    
-    
     [~, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);
-    
-    
+
     % flow back
     W1 = updateW(V1,W1,H1,par,1);
     W2 = updateW(V2,W2,H2,par,2);
-    
     
     % check results
     record = calcuCost(V1,W1,H1,V2,W2,H2,THETA1,THETA2);
@@ -116,7 +116,7 @@ for last_iter = 1:par.max_iter
         fprintf('iter: %d, step: %f, cost: %f (V1-cost: %f, V2-cost: %f, Con-cost: %f & %f)\n', ...
             last_iter, step, new_cost, record(1), record(2), record(3), record(4));
     end
-    if step >= 0 && step < par.patience
+    if last_iter > par.min_iter && step >= 0 && step < par.patience
         break;
     end
 end
@@ -126,7 +126,10 @@ end
 %------------------------------------------------------------------------------------------------------------------------
 function A = normalizeRow(A)
 for i = 1:size(A,1)
-    A(i,:) = A(i,:)/sum(A(i,:));
+    sum_ = sum(A(i,:));
+    if sum_ ~= 0 && (sum_ < 0.999 || sum_ > 1.001)
+        A(i,:) = A(i,:)/sum_;
+    end
 end
 A(A<0) = 0;
 end
@@ -134,7 +137,7 @@ end
 function A = normalizeColumn(A)
 for i = 1:size(A,2)
     sum_ = sum(A(:,i));
-    if sum_ < 0.999 || sum_ > 1.001
+    if sum_ ~= 0 && (sum_ < 0.999 || sum_ > 1.001)
         A(:,i) = A(:,i)/sum(A(:,i));
     end
 end
@@ -163,30 +166,33 @@ function record = calcuCost(V1,W1,H1,V2,W2,H2,THETA1,THETA2)
 cost = @(V,W,H) sqrt(sum(sum((V-W*H).^2)));
 a = cost(V1,W1,H1);
 b = cost(V2,W2,H2);
+% for test =========
+% c = 0;
+% d = 0;
+% ==================
 c = norm((H1'*THETA1)'-H2,'fro');
 d = norm((H2'*THETA2)'-H1,'fro');
 record = [a b c d];
 end
-
 
 function H = updateH(V,W,H,par,idx)
 if strcmp(par.method,'MU')
     H = updateH_MU(V,W,H,par.hCoef);
 elseif strcmp(par.method,'ALS')
     H = updateH_ALS(V,W,H,par.hCoef);
-elseif strcmp(par.method,'BP')
+elseif strcmp(par.method,'BP') || strcmp(par.method,'AS')
     if idx == 1
-        [H,~,~] = nnlsm([W;par.eye_H_K],[V;par.zeroKN],H);
+        [H,~,~] = nnlsm([W;par.eye_H_K],[V;par.zeroKN],H, strcmp(par.method,'BP'));
     elseif idx == 2
-        [H,~,~] = nnlsm([W;par.eye_H_J],[V;par.zeroJN],H);
+        [H,~,~] = nnlsm([W;par.eye_H_J],[V;par.zeroJN],H, strcmp(par.method,'BP'));
     else
         error(['updateH param idx unavailable: ', idx]);
     end
-elseif strcmp(par.method,'SBP')
+elseif strcmp(par.method,'SBP') || strcmp(par.method,'SAS')
     if idx == 1
-        [H,~,~] = nnlsm([W;par.ones_H_K],[V;par.zero1N],H);
+        [H,~,~] = nnlsm([W;par.ones_H_K],[V;par.zero1N],H, strcmp(par.method,'BP'));
     elseif idx == 2
-        [H,~,~] = nnlsm([W;par.ones_H_J],[V;par.zero1N],H);
+        [H,~,~] = nnlsm([W;par.ones_H_J],[V;par.zero1N],H, strcmp(par.method,'BP'));
     else
         error(['updateH param idx unavailable: ', idx]);
     end
@@ -198,22 +204,22 @@ if strcmp(par.method,'MU')
     W = updateW_MU(V,W,H,par.hCoef);
 elseif strcmp(par.method,'ALS')
     W = updateW_ALS(V,W,H,par.hCoef);
-elseif strcmp(par.method,'BP')
+elseif strcmp(par.method,'BP') || strcmp(par.method,'AS')
     if idx == 1
-        [W,~,~] = nnlsm([H';par.eye_W_K],[V';par.zeroKT],W');
+        [W,~,~] = nnlsm([H';par.eye_W_K],[V';par.zeroKT1],W', strcmp(par.method,'BP'));
         W = W';
     elseif idx == 2
-        [W,~,~] = nnlsm([H';par.eye_W_J],[V';par.zeroJT],W');
+        [W,~,~] = nnlsm([H';par.eye_W_J],[V';par.zeroJT2],W', strcmp(par.method,'BP'));
         W = W';
     else
         error(['updateW param idx unavailable: ', idx]);
     end
-elseif strcmp(par.method,'SBP') % absolutely
+elseif strcmp(par.method,'SBP') || strcmp(par.method,'SAS') % absolutely
     if idx == 1
-        [W,~,~] = nnlsm([H';par.eye_W_K],[V';par.zeroKT],W');
+        [W,~,~] = nnlsm([H';par.eye_W_K],[V';par.zeroKT1],W', strcmp(par.method,'BP'));
         W = W';
     elseif idx == 2
-        [W,~,~] = nnlsm([H';par.eye_W_J],[V';par.zeroJT],W');
+        [W,~,~] = nnlsm([H';par.eye_W_J],[V';par.zeroJT2],W', strcmp(par.method,'BP'));
         W = W';
     else
         error(['updateW param idx unavailable: ', idx]);
@@ -221,9 +227,12 @@ elseif strcmp(par.method,'SBP') % absolutely
 end
 end
 
-function [X,grad,iter] = nnlsm(A,B,init)
-% [X,grad,iter] = nnlsm_blockpivot(A,B,0,init);
-[X,grad,iter] = nnlsm_activeset(A,B,1,0,init);
+function [X,grad,iter] = nnlsm(A,B,init,is_bp)
+if is_bp
+    [X,grad,iter] = nnlsm_blockpivot(A,B,0,init);
+else
+    [X,grad,iter] = nnlsm_activeset(A,B,1,0,init);
+end
 end
 
 function H = updateH_MU(V,W,H,coef)

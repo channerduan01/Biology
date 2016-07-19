@@ -7,7 +7,13 @@ addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 
 
 
-method = 'BP';
+method = 'SBP';
+w_coef = 2;
+h_coef = 2;
+t_coef = 0.5;
+max_iter = 80;
+min_iter = 80;
+
 
 REPEAT_NUM = 100;
 RESULT_TABLE = zeros(REPEAT_NUM, 4*3);
@@ -59,12 +65,14 @@ toc
 
 
 %% SNMF innovative model, two stage
+% while true
 tic
 index_ = 3;
 [W1,H1,W2,H2,~,HIS,last_iter] = ...
     CoNMF_v2_separate(MRNA, PROTEIN, K, J ...
-    , 'W_COEF', 2, 'H_COEF', 2, 'T_COEF', 1 ...
+    , 'W_COEF', w_coef, 'H_COEF', h_coef, 'T_COEF', t_coef ...
     , 'VERBOSE', 0, 'METHOD', method ...
+    , 'MIN_ITER', min_iter, 'MAX_ITER', max_iter ...
     );
 THETA2 = CalcuTheta(H1, H2, K, J, N);
 [~, idx1] = max(H1);
@@ -80,14 +88,19 @@ fprintf('Naive NMFs theta-error: %f, mrna correct rate: %f, protein correct rate
     theta_error, mrna_correct, protein_correct);
 RESULT_TABLE(REPEAT_TIME, 4:6) = [theta_error, mrna_correct, protein_correct];
 toc
+% if isnan(theta_error)
+%    break; 
+% end
+% end
 
 %% SNMF innovative model, coupled model
 tic
 index_ = 4;
 [W1,H1,W2,H2,THETA3,HIS,last_iter] = ...
     CoNMF_v3_co2(MRNA, PROTEIN, K, J, 'MAX_ITER', 100, 'PATIENCE', 1 ...
-    , 'W_COEF', 2, 'H_COEF', 2, 'T_COEF', 0.5 ...
+    , 'W_COEF', w_coef, 'H_COEF', h_coef, 'T_COEF', t_coef ...
     , 'VERBOSE', 0, 'METHOD', method ...
+    , 'MIN_ITER', min_iter, 'MAX_ITER', max_iter ...
     );
 [~, idx1] = max(H1);
 IDX_MATRIX_MRNA(index_,:) = idx1;
@@ -106,11 +119,19 @@ toc
 %% SNMF innovative model, flow model
 tic
 index_ = 5;
-[W1,H1,W2,H2,THETA4,HIS,last_iter] = ...
+[W1,H1,W2,H2,~,HIS,last_iter] = ...
     CoNMF_v4_flow(MRNA, PROTEIN, K, J ...
-    , 'W_COEF', 2, 'H_COEF', 2, 'T_COEF', 0.5 ...
+    , 'W_COEF', w_coef, 'H_COEF', h_coef, 'T_COEF', t_coef ...
     , 'VERBOSE', 0, 'METHOD', method ...
+    , 'MIN_ITER', min_iter, 'MAX_ITER', max_iter ...
     );
+% [W1,H1,W2,H2,~,HIS,last_iter] = ...
+%     CoNMF_v2_separate(MRNA, PROTEIN, K, J ...
+%     , 'W_COEF', 2, 'H_COEF', 2, 'T_COEF', 1 ...
+%     , 'VERBOSE', 0, 'METHOD', method ...
+%     );
+THETA4 = CalcuTheta(H1, H2, K, J, N);
+
 [~, idx1] = max(H1);
 IDX_MATRIX_MRNA(index_,:) = idx1;
 [~, idx2] = max(H2);
@@ -119,7 +140,7 @@ IDX_MATRIX_PROTEIN(index_,:) = idx2;
 THETA4 = ArrangeTheta(IDX_MATRIX_MRNA(1,:), idx1, IDX_MATRIX_PROTEIN(1,:), idx2, THETA4, K, J);
 [mrna_correct,mrna_C2] = CalcuConsistency(IDX_MATRIX_MRNA([1,index_],:));
 [protein_correct,protein_C2] = CalcuConsistency(IDX_MATRIX_PROTEIN([1,index_],:));
-theta_error = norm(THETA_ORIGINAL-THETA3,'fro');
+theta_error = norm(THETA_ORIGINAL-THETA4,'fro');
 fprintf('FLow NMFs theta-error: %f, mrna correct rate: %f, protein correct rate: %f\n', ...
     theta_error, mrna_correct, protein_correct);
 RESULT_TABLE(REPEAT_TIME, 10:12) = [theta_error, mrna_correct, protein_correct];
