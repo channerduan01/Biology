@@ -53,7 +53,7 @@ fprintf('mrna consistency: %f, protein consistency: %f\n', mrna_consistency, pro
 %% Single Analysis
 SELETION_THRESHOLD = 0.5;
 [mrna_clusters, protein_clusters] = CalcuClusterExtent(K, J, N, H1, H2, SELETION_THRESHOLD);
-OutputClustersNM(K, J, mrna_clusters, protein_clusters, names);
+OutputClustersNM(K, J, mrna_clusters, protein_clusters, true, names);
 ANALYSIS_PROTEIN_CLUSTER_IDX = 10;
 ClusterAnalysis(ANALYSIS_PROTEIN_CLUSTER_IDX, H1, protein_clusters, MRNA, PROTEIN_ORIGINAL, names);
 
@@ -75,7 +75,7 @@ while true
     if index > REPEAPT, break;end
     fprintf('\n\nstart round %d >>>>>>', index);
     try
-        [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = ...
+        [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,HIS] = ...
             MyCoupleClustering(MRNA, PROTEIN, K, J, MAX_ITER, patience, true);
         [THETA_reverse, entropy_j_k, entropy_k_j] = EntropyCalculate(K, J, PI_K, THETA);
         [R_J, Q_J] = CalcuSubclusterBelonging(MRNA, AVG_K, VARIANCE_K, PROTEIN, AVG_J, VARIANCE_J, PI_K, THETA_reverse, R, K, J, N, T);
@@ -91,7 +91,7 @@ while true
     end
     RESULT{index} = struct('low_bound',low_bound,'entropy_j_k',entropy_j_k,'entropy_k_j',entropy_k_j, ...
         'THETA_reverse',THETA_reverse,'Q',Q,'R',R,'R_J',R_J,'Q_J',Q_J,'PI_K',PI_K,'AVG_K',AVG_K, ...
-        'VARIANCE_K',VARIANCE_K,'THETA',THETA,'AVG_J',AVG_J,'VARIANCE_J',VARIANCE_J);
+        'VARIANCE_K',VARIANCE_K,'THETA',THETA,'AVG_J',AVG_J,'VARIANCE_J',VARIANCE_J,'HIS',HIS);
     fprintf('Low bound is %f\n', low_bound);
     %     fprintf('cost is %f\n', cost(AVG_J,AVG_K,THETA_reverse'));
     fprintf('Entropy of p(j|k) = %f\n', entropy_j_k);
@@ -114,7 +114,7 @@ end
 %% Single Analysis
 SELETION_THRESHOLD = 0.8;
 [mrna_clusters, protein_clusters] = CalcuClusterExtent(K, J, N, Q, Q_J, SELETION_THRESHOLD);
-OutputClustersNM(K, J, mrna_clusters, protein_clusters, names);
+OutputClustersNM(K, J, mrna_clusters, protein_clusters, true, names);
 ANALYSIS_PROTEIN_CLUSTER_IDX = 2;
 ClusterAnalysis(ANALYSIS_PROTEIN_CLUSTER_IDX, Q, protein_clusters, MRNA, PROTEIN_ORIGINAL, names);
 
@@ -135,22 +135,20 @@ ClusterAnalysis(ANALYSIS_PROTEIN_CLUSTER_IDX, Q, protein_clusters, MRNA, PROTEIN
 % end
 
 %%
-gene_idxs1 = [protein_clusters{1}(3:6) protein_clusters{10}(21:23) protein_clusters{7}(2:5)];
-figure();
-hold on;
-subplot(121), imagesc(MRNA(:,gene_idxs1)');
-subplot(122), imagesc(PROTEIN(:,gene_idxs1)');
-hold off;
+% gene_idxs1 = [protein_clusters{1}(3:6) protein_clusters{10}(21:23) protein_clusters{7}(2:5)];
+% figure();
+% hold on;
+% subplot(121), imagesc(MRNA(:,gene_idxs1)');
+% subplot(122), imagesc(PROTEIN(:,gene_idxs1)');
+% hold off;
 
 %%
-
 res = RESULT{1};
-for i = 2:20
+for i = 2:REPEAPT
     if res.low_bound < RESULT{i}.low_bound
         res = RESULT{i};
     end
 end
-
 Q = res.Q;
 Q_J = res.Q_J;
 

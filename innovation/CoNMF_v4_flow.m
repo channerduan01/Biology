@@ -93,6 +93,7 @@ for last_iter = 1:par.max_iter
     % simple flow start
     H1 = updateH(V1,W1,H1,par,1);
     H2 = updateH(V2,W2,H2,par,2);
+%     H2 = V2;
     [~, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);
     
     % exchange flow
@@ -104,8 +105,17 @@ for last_iter = 1:par.max_iter
 %     WaveForH2 = 2* ones(size(WaveForH2));
 %     WaveForH1 = 2* ones(size(WaveForH1));
     % ===========
-    H2 = (1-par.tCoef)*H2 + par.tCoef*WaveForH2.*H2;
-    H1 = (1-par.tCoef)*H1 + par.tCoef*WaveForH1.*H1;
+%     WaveForH2 = quantityMatchColumn(WaveForH2, H2);
+%     WaveForH1 = quantityMatchColumn(WaveForH1, H1);
+    WaveForH2 = WaveForH2.*H2;
+    WaveForH1 = WaveForH1.*H1;
+    
+    H2 = (1-par.tCoef)*H2 + par.tCoef*WaveForH2;
+%     H2 = V2;
+%     t_1 = mean(sparsity(H1));
+    H1 = (1-par.tCoef)*H1 + par.tCoef*WaveForH1;
+%     t_2 = mean(sparsity(H1));
+%     fprintf('%.3f -> %.3f\n', t_1, t_2);
     [~, THETA1, THETA2] = updateTheta(H1, H2, K, J, N);
 
     % flow back
@@ -121,6 +131,16 @@ for last_iter = 1:par.max_iter
     if par.verbose
         fprintf('iter: %d, step: %f, cost: %f (V1-cost: %f, V2-cost: %f, Con-cost: %f & %f)\n', ...
             last_iter, step, new_cost, record(1), record(2), record(3), record(4));
+        s_W1 = sparsity(W1);
+        s_H1 = sparsity(H1);
+        s_W2 = sparsity(W2);
+        s_H2 = sparsity(H2);
+        if isnan(sum(s_W1)) || isnan(sum(s_H1)) || isnan(sum(s_W2)) || isnan(sum(s_H2))
+            error('illegal sparsity!!!');
+        end        
+        fprintf('      sparse, W1: %f (%f), H1: %f (%f), W2: %f (%f), H2: %f (%f)\n', ...
+            mean(s_W1), std(s_W1), mean(s_H1), std(s_H1), ...
+            mean(s_W2), std(s_W2), mean(s_H2), std(s_H2));        
     end
     if last_iter > par.min_iter && step >= 0 && step < par.patience
         break;
@@ -130,6 +150,12 @@ end
 %------------------------------------------------------------------------------------------------------------------------
 %                                    Utility Functions
 %------------------------------------------------------------------------------------------------------------------------
+function A = quantityMatchColumn(A, Target) 
+for i = 1:size(A,2)
+    A(:,i) = A(:,i) .* sum(Target(:,i));
+end
+end
+
 function A = normalizeRow(A)
 for i = 1:size(A,1)
     sum_ = sum(A(i,:));

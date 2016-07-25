@@ -127,6 +127,9 @@ for last_iter = 1:par.max_iter
     if par.verbose
         fprintf('iter: %d, step: %f, cost: %f (V1-cost: %f, V2-cost: %f, Con-cost: %f & %f)\n', ...
             last_iter, step, new_cost, record(1), record(2), record(3), record(4));
+        fprintf('      sparse, W1: %f (%f), H1: %f (%f), W2: %f (%f), H2: %f (%f)\n', ...
+            mean(sparsity(W1)), std(sparsity(W1)), mean(sparsity(H1)), std(sparsity(H1)), ...
+            mean(sparsity(W2)), std(sparsity(W2)), mean(sparsity(H2)), std(sparsity(H2)));        
     end
     if last_iter > par.min_iter && step >= 0 && step < par.patience
         break;

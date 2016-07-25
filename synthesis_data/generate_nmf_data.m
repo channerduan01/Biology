@@ -91,15 +91,19 @@ title('Real THETA');
 % MRNA = MRNA + randn(size(MRNA))*0.1;
 % PROTEIN = PROTEIN + randn(size(PROTEIN))*1;
 
-MRNA = MRNA + randn(size(MRNA))*0.2;
-PROTEIN = PROTEIN + randn(size(PROTEIN))*3;
 
-% MRNA = MRNA + rand(size(MRNA))*2;
-PROTEIN = PROTEIN + rand(size(PROTEIN))*3;
+PROTEIN = PROTEIN + randn(size(PROTEIN))*1;
+MRNA = MRNA + randn(size(MRNA))*4;
+MRNA = MRNA + rand(size(MRNA))*4;
+
+% successful pattern ====
+% MRNA = MRNA + randn(size(MRNA))*0.2;
+% PROTEIN = PROTEIN + randn(size(PROTEIN))*4;
+% PROTEIN = PROTEIN + rand(size(PROTEIN))*4;
+% =======================
 
 % MRNA = MRNA + wgn(size(MRNA,1),size(MRNA,2),1)*1;
 % PROTEIN = PROTEIN + wgn(size(PROTEIN,1),size(PROTEIN,2),1)*1;
-
 % =======================================
 
 

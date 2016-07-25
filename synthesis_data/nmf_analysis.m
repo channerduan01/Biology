@@ -10,12 +10,11 @@ addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 method = 'BP';
 w_coef = 2;
 h_coef = 2;
-t_coef = 1;
+t_coef = 0.8;
 max_iter = 100;
 min_iter = 100;
 
-
-REPEAT_NUM = 5;
+REPEAT_NUM = 2;
 RESULT_TABLE = zeros(REPEAT_NUM, 4*3);
 iter_used = zeros(REPEAT_NUM, 3);
 
@@ -23,10 +22,10 @@ IDX_MATRIX_MRNA = zeros(2, N);
 IDX_MATRIX_PROTEIN = zeros(2, N);
 
 index_ = 1;
-[~, idx] = max(H1_ORIGINAL);
-IDX_MATRIX_MRNA(index_,:) = idx;
-[~, idx] = max(H2_ORIGINAL);
-IDX_MATRIX_PROTEIN(index_,:) = idx;
+[~, idx_mrna] = max(H1_ORIGINAL);
+IDX_MATRIX_MRNA(index_,:) = idx_mrna;
+[~, idx_protein] = max(H2_ORIGINAL);
+IDX_MATRIX_PROTEIN(index_,:) = idx_protein;
 
 
 for REPEAT_TIME = 1:REPEAT_NUM
@@ -53,10 +52,12 @@ for i = 1:length(idx2)
 end
 THETA1 = CalcuTheta(H1, H2, K, J, N);
 % recover THETA to original order!
-THETA1 = ArrangeTheta(IDX_MATRIX_MRNA(1,:), idx1, IDX_MATRIX_PROTEIN(1,:), idx2, THETA1, K, J);
+THETA1 = ArrangeTheta(idx_mrna, idx1, idx_protein, idx2, THETA1, K, J);
 [~, entropy_j_k1, entropy_k_j1] = EntropyCalculate(K, J, sum(H1,2)/N, THETA1);
-[mrna_correct,mrna_C1] = CalcuConsistency(IDX_MATRIX_MRNA([1,index_],:));
-[protein_correct,protein_C1] = CalcuConsistency(IDX_MATRIX_PROTEIN([1,index_],:));
+% [mrna_correct,mrna_C1] = CalcuConsistency(IDX_MATRIX_MRNA([1,index_],:));
+% [protein_correct,protein_C1] = CalcuConsistency(IDX_MATRIX_PROTEIN([1,index_],:));
+mrna_correct = purity(idx1, idx_mrna);
+protein_correct = purity(idx2, idx_protein);
 theta_error = norm(THETA_ORIGINAL-THETA1,'fro');
 fprintf('k-means theta-error: %f, mrna correct rate: %f, protein correct rate: %f\n', ...
     theta_error, mrna_correct, protein_correct);
@@ -70,7 +71,6 @@ tic
 index_ = 3;
 [W1,H1,W2,H2,~,HIS,last_iter] = ...
     CoNMF_v2_separate(MRNA, PROTEIN, K, J ...
-    , 'PATIENCE', 0.005 ...
     , 'W_COEF', w_coef, 'H_COEF', h_coef, 'T_COEF', t_coef ...
     , 'VERBOSE', 0, 'METHOD', method ...
     , 'MIN_ITER', min_iter, 'MAX_ITER', max_iter ...
@@ -85,9 +85,11 @@ IDX_MATRIX_PROTEIN(index_,:) = idx2;
 
 
 % recover THETA to original order!
-THETA2 = ArrangeTheta(IDX_MATRIX_MRNA(1,:), idx1, IDX_MATRIX_PROTEIN(1,:), idx2, THETA2, K, J);
-[mrna_correct,mrna_C2] = CalcuConsistency(IDX_MATRIX_MRNA([1,index_],:));
-[protein_correct,protein_C2] = CalcuConsistency(IDX_MATRIX_PROTEIN([1,index_],:));
+THETA2 = ArrangeTheta(idx_mrna, idx1, idx_protein, idx2, THETA2, K, J);
+% [mrna_correct,mrna_C2] = CalcuConsistency(IDX_MATRIX_MRNA([1,index_],:));
+% [protein_correct,protein_C2] = CalcuConsistency(IDX_MATRIX_PROTEIN([1,index_],:));
+mrna_correct = purity(idx1, idx_mrna);
+protein_correct = purity(idx2, idx_protein);
 theta_error = norm(THETA_ORIGINAL-THETA2,'fro');
 fprintf('Naive NMFs theta-error: %f, mrna correct rate: %f, protein correct rate: %f\n', ...
     theta_error, mrna_correct, protein_correct);
@@ -102,7 +104,7 @@ toc
 tic
 index_ = 4;
 [W1,H1,W2,H2,THETA3,HIS,last_iter] = ...
-    CoNMF_v3_co2(MRNA, PROTEIN, K, J, 'MAX_ITER', 100, 'PATIENCE', 1 ...
+    CoNMF_v3_co2(MRNA, PROTEIN, K, J ...
     , 'W_COEF', w_coef, 'H_COEF', h_coef, 'T_COEF', t_coef ...
     , 'VERBOSE', 0, 'METHOD', method ...
     , 'MIN_ITER', min_iter, 'MAX_ITER', max_iter ...
@@ -113,9 +115,11 @@ IDX_MATRIX_MRNA(index_,:) = idx1;
 [~, idx2] = max(H2);
 IDX_MATRIX_PROTEIN(index_,:) = idx2;
 % recover THETA to original order!
-THETA3 = ArrangeTheta(IDX_MATRIX_MRNA(1,:), idx1, IDX_MATRIX_PROTEIN(1,:), idx2, THETA3, K, J);
-[mrna_correct,mrna_C2] = CalcuConsistency(IDX_MATRIX_MRNA([1,index_],:));
-[protein_correct,protein_C2] = CalcuConsistency(IDX_MATRIX_PROTEIN([1,index_],:));
+THETA3 = ArrangeTheta(idx_mrna, idx1, idx_protein, idx2, THETA3, K, J);
+% [mrna_correct,mrna_C2] = CalcuConsistency(IDX_MATRIX_MRNA([1,index_],:));
+% [protein_correct,protein_C2] = CalcuConsistency(IDX_MATRIX_PROTEIN([1,index_],:));
+mrna_correct = purity(idx1, idx_mrna);
+protein_correct = purity(idx2, idx_protein);
 theta_error = norm(THETA_ORIGINAL-THETA3,'fro');
 fprintf('Coupled NMFs theta-error: %f, mrna correct rate: %f, protein correct rate: %f\n', ...
     theta_error, mrna_correct, protein_correct);
@@ -137,9 +141,11 @@ IDX_MATRIX_MRNA(index_,:) = idx1;
 [~, idx2] = max(H2);
 IDX_MATRIX_PROTEIN(index_,:) = idx2;
 % recover THETA to original order!
-THETA4 = ArrangeTheta(IDX_MATRIX_MRNA(1,:), idx1, IDX_MATRIX_PROTEIN(1,:), idx2, THETA4, K, J);
-[mrna_correct,mrna_C2] = CalcuConsistency(IDX_MATRIX_MRNA([1,index_],:));
-[protein_correct,protein_C2] = CalcuConsistency(IDX_MATRIX_PROTEIN([1,index_],:));
+THETA4 = ArrangeTheta(idx_mrna, idx1, idx_protein, idx2, THETA4, K, J);
+% [mrna_correct,mrna_C2] = CalcuConsistency(IDX_MATRIX_MRNA([1,index_],:));
+% [protein_correct,protein_C2] = CalcuConsistency(IDX_MATRIX_PROTEIN([1,index_],:));
+mrna_correct = purity(idx1, idx_mrna);
+protein_correct = purity(idx2, idx_protein);
 theta_error = norm(THETA_ORIGINAL-THETA4,'fro');
 fprintf('FLow NMFs theta-error: %f, mrna correct rate: %f, protein correct rate: %f\n', ...
     theta_error, mrna_correct, protein_correct);
@@ -173,6 +179,30 @@ hold off;
 %% visualize the result
 
 % displayImages(W1, [20,20], 1, 'W1 result');
+
+
+%% output the performance
+mean_err = mean(RESULT_TABLE);
+std_err = std(RESULT_TABLE);
+fprintf('\n%d run\n', REPEAT_NUM);
+mean(iter_used)
+fprintf('%-20s %5.1f%% + %.1f, %.1f%% + %.1f, %.2f + %.2f\n' ...
+    , 'two k-means:', mean_err(2)*100, std_err(2)*100 ...
+    , mean_err(3)*100, std_err(3)*100 ...
+    , mean_err(1), std_err(1));
+fprintf('%-20s %5.1f%% + %.1f, %.1f%% + %.1f, %.2f + %.2f\n' ...
+    , 'two NMFs:', mean_err(5)*100, std_err(5)*100 ...
+    , mean_err(6)*100, std_err(6)*100 ...
+    , mean_err(4), std_err(4));
+fprintf('%-20s %5.1f%% + %.1f, %.1f%% + %.1f, %.2f + %.2f\n' ...
+    , 'Coupled NMF:', mean_err(8)*100, std_err(8)*100 ...
+    , mean_err(9)*100, std_err(9)*100 ...
+    , mean_err(7), std_err(7));
+fprintf('%-20s %5.1f%% + %.1f, %.1f%% + %.1f, %.2f + %.2f\n' ...
+    , 'Flow NMF: ', mean_err(11)*100, std_err(11)*100 ...
+    , mean_err(12)*100, std_err(12)*100 ...
+    , mean_err(10), std_err(10));
+
 
 
 
