@@ -2,6 +2,7 @@ function [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,HIS] = ...
     MyCoupleClustering(MRNA, PROTEIN, K, J, MAX_ITER, patience, b_verbose)
 [T,N] = size(MRNA);
 % init parameters
+% alternative way to initialize, worse way~
 %     Q = rand(K, N);
 %     R = rand(J, N, K);
 %     for i = 1:N
@@ -13,7 +14,6 @@ function [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,HIS] = ...
 %         end
 %     end
 %     [PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = Maximum(Q,R,MRNA,PROTEIN,K,J,T,N);
-
 THETA = rand(K, J);
 for k = 1:K
     THETA(k,:) = THETA(k,:)/sum(THETA(k,:));
@@ -40,9 +40,10 @@ for iter = 1:MAX_ITER
     low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N);
     if isnan(low_bound), throw(MException('MyCoupleClustering:Nan','Nan value!!!')); end
     HIS(iter+1,1) = low_bound;
-    if b_verbose, fprintf('iter-%d  step: %f, low_bound: %f, dive-R: %f\n', iter, low_bound-last_low_bound,...
+    step = low_bound-last_low_bound;
+    if b_verbose, fprintf('iter-%d  step: %f, low_bound: %f, dive-R: %f\n', iter, step,...
             low_bound, DivergenceOfR(R,K)); end
-    if low_bound-last_low_bound > 0 && low_bound-last_low_bound < patience
+    if step > 0 && step < patience
         if b_verbose, fprintf('iter-%d, converged!!!\n', iter); end
         break
     end
@@ -82,7 +83,12 @@ end
 THETA = zeros(K, J);
 for k = 1:K
     for j = 1:J
-        THETA(k, j) = sum(R(j,:,k).*Q(k,:))/sum(Q(k,:));
+        sum_ = sum(Q(k,:));
+        if sum_ ~= 0
+            THETA(k, j) = sum(R(j,:,k).*Q(k,:))/sum_;
+        else
+            THETA(k, j) = 0;
+        end
     end
 end
 AVG_J = zeros(T, J);

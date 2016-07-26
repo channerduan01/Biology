@@ -102,8 +102,8 @@ for last_iter = 1:par.max_iter
     % test ======
 %     WaveForH2 = zeros(size(WaveForH2));
 %     WaveForH1 = zeros(size(WaveForH1));
-%     WaveForH2 = 2* ones(size(WaveForH2));
-%     WaveForH1 = 2* ones(size(WaveForH1));
+%     WaveForH2 = 1.5* ones(size(WaveForH2));
+%     WaveForH1 = 1.5* ones(size(WaveForH1));
     % ===========
 %     WaveForH2 = quantityMatchColumn(WaveForH2, H2);
 %     WaveForH1 = quantityMatchColumn(WaveForH1, H1);

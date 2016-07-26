@@ -1,5 +1,6 @@
-%% NMF coupled clustering model
-%
+%% NMF coupled clustering model, Parameters tune
+
+
 % init data
 close all
 clear
@@ -18,26 +19,27 @@ PROTEIN = normalize(PROTEIN);
 [T,N] = size(MRNA);
 
 %s basic params
-REPEAT = 20;
+REPEAT = 10;
 K = 15;
 J = 19;
-min_iter = 20;
-max_iter = 200;
+min_iter = 100;
+max_iter = 100;
 switch_on_verbose = false;
-    
-    
-% param search field
+
+% param search field, key setting
 W_coef = [0.1];
 H_coef = [0.1];
-T_coef = [0.5];
+T_coef = [0.9];
+
 pattern_num = length(W_coef)*length(H_coef)*length(T_coef);
 RESULT_PARAM = cell(pattern_num,1);
 index_ = 1;
 for i1 = 1:length(W_coef)
     for i2 = 1:length(H_coef)
         for i3 = 1:length(T_coef)
-            RESULT_PARAM{index_} = struct('wCoef', W_coef(i1),'hCoef', H_coef(i2), ...
-                'tCoef', T_coef(i3), 'pattern', strcat(num2str(W_coef(i1)),'-',num2str(H_coef(i2)),'-',num2str(T_coef(i2)) ));
+            RESULT_PARAM{index_} = struct('wCoef', W_coef(i1),'hCoef', H_coef(i2), 'tCoef', T_coef(i3), ...
+                'pattern', strcat(num2str(W_coef(i1)),'-',num2str(H_coef(i2)),'-',num2str(T_coef(i3)) ));
+            index_ = index_+1;
         end
     end
 end
@@ -54,14 +56,19 @@ for pa = 1:pattern_num
     while true
         i = i + 1;
         if i > REPEAT, break; end
-        fprintf('process-iter >> %d\n', i);
-        [W1_res,H1_res,W2_res,H2_res,Theta,HIS,last_iter] = CoNMF_v4_flow(MRNA, PROTEIN, K, J ...
-            , 'MAX_ITER', max_iter, 'MIN_ITER', min_iter, 'VERBOSE', switch_on_verbose, 'METHOD', 'BP' ...
-            , 'W_COEF', RESULT_PARAM{pa}.wCoef, 'H_COEF', RESULT_PARAM{pa}.hCoef, 'T_COEF', RESULT_PARAM{pa}.tCoef, 'PATIENCE', 0.0001 ...
-            );
+        try
+            fprintf('process-iter >> %d\n', i);
+            [W1_res,H1_res,W2_res,H2_res,Theta,HIS,last_iter] = CoNMF_v4_flow(MRNA, PROTEIN, K, J ...
+                , 'MAX_ITER', max_iter, 'MIN_ITER', min_iter, 'VERBOSE', switch_on_verbose, 'METHOD', 'BP' ...
+                , 'W_COEF', RESULT_PARAM{pa}.wCoef, 'H_COEF', RESULT_PARAM{pa}.hCoef, 'T_COEF', RESULT_PARAM{pa}.tCoef, 'PATIENCE', 0.0001 ...
+                );
+        catch
+            err_num = err_num+1;
+            i = i - 1;
+            continue;
+        end
         RESULT{i} = struct('W1',W1_res,'H1',H1_res,'W2',W2_res,'H2',H2_res, ...
             'Theta',Theta,'HIS',HIS,'last_iter',last_iter);
-        
         if sum(sum(isnan(Theta))) > 0
             err_num = err_num+1;
             i = i - 1;
@@ -97,13 +104,23 @@ for pa = 1:pattern_num
     RESULT_PARAM{pa}.ITER = [num2str(mean(iters)),'+',num2str(std(iters))];
 end
 
-%%
+%% Converge comparison
+figure();
+hold on;
+for i = 1:pattern_num
+    pattern = RESULT_PARAM{i};
+    plot(sum(pattern.HIS,2));
+    
+    fprintf('>%20s<, iter: %s, error: %d, m_con: %f, p_con: %f \n', pattern.pattern, pattern.ITER, ...
+        pattern.err_num, pattern.mrna_con, pattern.protein_con);
+end
+hold off;
 
-
-
-
-
-
+xlabel('iterations', 'FontSize', 16);
+ylabel('cost', 'FontSize', 16);
+title('Converge comparison', 'FontSize', 20)
+set(gca,'FontSize',20);
+legend('co: 0.9','co: 0.95','co: 0.99','co: 0.999','co: 1');
 
 
 

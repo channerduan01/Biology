@@ -4,10 +4,10 @@ clc
 
 addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 
-K = 10;
+K = 4;
 J = K;
 
-T = 50;
+T = 10;
 N = 500;
 
 %%
@@ -15,8 +15,8 @@ AVG_K_ = rand(T, K);
 COV_K_ = zeros(T, T, K);
 for k = 1:K
 %     COV_K_(:,:,k) = eye(T);
-       COV_K_(:,:,k) = eye(T)*rand();     % easy distribution
-%        COV_K_(:,:,k) = diag(rand(T,1));   % harder distribution
+%        COV_K_(:,:,k) = eye(T)*rand();     % easy distribution
+       COV_K_(:,:,k) = diag(rand(T,1));   % harder distribution
 %     COV_K_(:,:,k) = rand(T,T);   % much harder distribution
 %     COV_K_(:,:,k) = COV_K_(:,:,k) * COV_K_(:,:,k)';
     
@@ -26,18 +26,18 @@ AVG_J_ = rand(T,J);
 COV_J_ = zeros(T, T, J);
 for j = 1:J
 %     COV_J_(:,:,j) = eye(T);
-       COV_J_(:,:,j) = eye(T)*rand();
-%        COV_J_(:,:,j) = diag(rand(T,1));
+%        COV_J_(:,:,j) = eye(T)*rand();
+       COV_J_(:,:,j) = diag(rand(T,1));
 %     COV_J_(:,:,j) = rand(T,T);
 %     COV_J_(:,:,j) = COV_J_(:,:,j) * COV_J_(:,:,j)';
 end
 
 % force pattern ==================
-% factor_gap = 1;
-% for k = 1:K
-%     AVG_K_(:,k) = ones(T,1)*k*factor_gap;
-%     AVG_J_(:,k) = ones(T,1)*k*factor_gap;
-% end
+factor_gap = 1;
+for k = 1:K
+    AVG_K_(:,k) = ones(T,1)*k*factor_gap;
+    AVG_J_(:,k) = ones(T,1)*k*factor_gap;
+end
 % ================================
 
 
@@ -83,8 +83,8 @@ title('Real THETA');
 % MRNA = MRNA + randn(size(MRNA))*1;
 % PROTEIN = PROTEIN + randn(size(PROTEIN))*0.1;
 
-% MRNA = MRNA + randn(size(MRNA))*0.1;
-% PROTEIN = PROTEIN + randn(size(PROTEIN))*1;
+MRNA = MRNA + randn(size(MRNA))*0.1;
+PROTEIN = PROTEIN + randn(size(PROTEIN))*1;
 
 % MRNA = MRNA + randn(size(MRNA))*1;
 % PROTEIN = PROTEIN + randn(size(PROTEIN))*1;

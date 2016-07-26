@@ -1,3 +1,4 @@
+%% tricky function, for scaling problem
 function [res_] = MyMvnpdf(data, mean, cov)
 if sum(sum(isnan(cov))) > 0
     res_ = zeros(size(data,1),1);

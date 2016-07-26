@@ -12,7 +12,7 @@ while true
     % --------
     index = index + 1;
     if index > REPEAT, break;end
-    fprintf('\n\nstart iter: %d >>>>>>\n', index);
+    fprintf('\nstart iter: %d >>>>>>\n', index);
     try
         [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = ...
             MyCoupleClustering(MRNA, PROTEIN, K, J, MAX_ITER, patience, b_verbose);

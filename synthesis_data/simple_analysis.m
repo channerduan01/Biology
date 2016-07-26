@@ -5,7 +5,7 @@ close all;
 
 addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 
-repeat_run = 2;
+repeat_run = 20;
 
 IDX_MATRIX_MRNA = zeros(2, N);
 IDX_MATRIX_PROTEIN = zeros(2, N);
@@ -47,85 +47,26 @@ toc
 
 % drawCheckDataDistribution(MRNA',idx1,'MRNA K-MEANS');
 
-% %% Roger's statistic model
-% tic
-% index_ = 3;
+%% Rogers statistic model
+tic
+index_ = 3;
 % [RESULT_, best_result, err_num] = ...
-%     MyCoupleClusteringRepeat(MRNA, PROTEIN, K, J, 10, 10, true, repeat_run);
-% [~, idx1] = max(best_result.Q);
-% IDX_MATRIX_MRNA(index_,:) = idx1;
-% [~, idx2] = max(best_result.Q_J);
-% IDX_MATRIX_PROTEIN(index_,:) = idx2;
-% THETA2 = ArrangeTheta(IDX_MATRIX_MRNA(1,:), idx1, IDX_MATRIX_PROTEIN(1,:), idx2, best_result.THETA, K, J);
-% [~, entropy_j_k2, entropy_k_j2] = EntropyCalculate(K, J, sum(best_result.Q,2)/N, THETA2);
-% [mrna_correct,mrna_C3] = CalcuConsistency(IDX_MATRIX_MRNA([1,index_],:));
-% [protein_correct,protein_C3] = CalcuConsistency(IDX_MATRIX_PROTEIN([1,index_],:));
-% % fprintf('Roger''s mrna entropy_j_k: %f, protein entropy_k_j: %f\n', entropy_j_k2, entropy_k_j2);
-% fprintf('Roger''s mrna correct rate: %f, protein correct rate: %f\n', mrna_correct, protein_correct);
-% % fprintf('Roger''s norm-fro of dist: %.2f, norm-1 of dist: %.2f\n', ...
-% %     norm(THETA2-THETA_ORIGINAL,'fro'),norm(THETA2-THETA_ORIGINAL,1));
-% toc
-% 
+%     MyCoupleClusteringRepeat(MRNA, PROTEIN, K, J, 100, 0.1, false, repeat_run);
+[~, idx1] = max(best_result.Q);
+IDX_MATRIX_MRNA(index_,:) = idx1;
+[~, idx2] = max(best_result.Q_J);
+IDX_MATRIX_PROTEIN(index_,:) = idx2;
+THETA2 = ArrangeTheta(IDX_MATRIX_MRNA(1,:), idx1, IDX_MATRIX_PROTEIN(1,:), idx2, best_result.THETA, K, J);
+[~, entropy_j_k2, entropy_k_j2] = EntropyCalculate(K, J, sum(best_result.Q,2)/N, THETA2);
+[mrna_correct,mrna_C3] = CalcuConsistency(IDX_MATRIX_MRNA([1,index_],:));
+[protein_correct,protein_C3] = CalcuConsistency(IDX_MATRIX_PROTEIN([1,index_],:));
+% fprintf('Roger''s mrna entropy_j_k: %f, protein entropy_k_j: %f\n', entropy_j_k2, entropy_k_j2);
+fprintf('Roger''s mrna correct rate: %f, protein correct rate: %f\n', mrna_correct, protein_correct);
+% fprintf('Roger''s norm-fro of dist: %.2f, norm-1 of dist: %.2f\n', ...
+%     norm(THETA2-THETA_ORIGINAL,'fro'),norm(THETA2-THETA_ORIGINAL,1));
+toc
+
 % drawCheckDataDistribution(MRNA',idx1,'MRNA ROGER');
-
-
-%% SNMF innovative model, two stage
-tic
-index_ = 4;
-[W1,H1,W2,H2,~,HIS,last_iter] = ...
-    CoNMF_v2_separate(MRNA, PROTEIN, K, J ...
-    , 'W_COEF', 1, 'H_COEF', 1, 'T_COEF', 1 ...
-    , 'VERBOSE', 1 ...
-    );
-THETA2 = CalcuTheta(H1, H2, K, J, N);
-[~, idx1] = max(H1);
-IDX_MATRIX_MRNA(index_,:) = idx1;
-[~, idx2] = max(H2);
-IDX_MATRIX_PROTEIN(index_,:) = idx2;
-for k = 1:K
-    THETA2(k,:) = THETA2(k,:)./sum(THETA2(k,:));
-end
-% recover THETA to original order!
-THETA2 = ArrangeTheta(IDX_MATRIX_MRNA(1,:), idx1, IDX_MATRIX_PROTEIN(1,:), idx2, THETA2, K, J);
-[mrna_correct,mrna_C2] = CalcuConsistency(IDX_MATRIX_MRNA([1,index_],:));
-[protein_correct,protein_C2] = CalcuConsistency(IDX_MATRIX_PROTEIN([1,index_],:));
-fprintf('NMF mrna correct rate: %f, protein correct rate: %f\n', mrna_correct, protein_correct);
-% fprintf('SNMF norm-fro of dist: %.2f, norm-1 of dist: %.2f\n', ...
-%     norm(THETA3-THETA_ORIGINAL,'fro'),norm(THETA3-THETA_ORIGINAL,1));
-toc
-
-% drawCheckDataDistribution(MRNA',idx1,'MRNA SNMF');
-
-%% SNMF innovative model, coupled model
-tic
-index_ = 4;
-% [W1,H1,W2,H2,THETA3,HIS,last_iter] = ...
-%     CoNMF_v3_co2(MRNA, PROTEIN, K, J ...
-%     , 'W_COEF', 1, 'H_COEF', 1, 'T_COEF', 1 ...
-%     , 'VERBOSE', 1 ...
-%     );
-[W1,H1,W2,H2,THETA3,HIS,last_iter] = ...
-    CoNMF_v4_flow(MRNA, PROTEIN, K, J ...
-    , 'W_COEF', 1, 'H_COEF', 1, 'T_COEF', 1 ...
-    , 'VERBOSE', 1 ...
-    );
-
-% THETA3 = CalcuTheta(H1, H2, K, J, N);
-[~, idx1] = max(H1);
-IDX_MATRIX_MRNA(index_,:) = idx1;
-[~, idx2] = max(H2);
-IDX_MATRIX_PROTEIN(index_,:) = idx2;
-% for k = 1:K
-%     THETA3(k,:) = THETA3(k,:)./sum(THETA3(k,:));
-% end
-% recover THETA to original order!
-THETA3 = ArrangeTheta(IDX_MATRIX_MRNA(1,:), idx1, IDX_MATRIX_PROTEIN(1,:), idx2, THETA3, K, J);
-[mrna_correct,mrna_C2] = CalcuConsistency(IDX_MATRIX_MRNA([1,index_],:));
-[protein_correct,protein_C2] = CalcuConsistency(IDX_MATRIX_PROTEIN([1,index_],:));
-fprintf('Coupled NMF mrna correct rate: %f, protein correct rate: %f\n', mrna_correct, protein_correct);
-% fprintf('SNMF norm-fro of dist: %.2f, norm-1 of dist: %.2f\n', ...
-%     norm(THETA3-THETA_ORIGINAL,'fro'),norm(THETA3-THETA_ORIGINAL,1));
-toc
 
 %% compare the patterns
 figure();
@@ -133,18 +74,13 @@ set(gca,'FontSize',16);
 hold on;
 subplot(221), imagesc(THETA_ORIGINAL);
 axis('off');
-title('Original Theta', 'FontSize', 20)
+title('Original Theta', 'FontSize', 20);
 subplot(222), imagesc(THETA1);
 axis('off');
-title('Coupled K-means Theta', 'FontSize', 20)
+title('Double K-means Theta', 'FontSize', 20);
 subplot(223), imagesc(THETA2);
 axis('off');
-% title('Roger''s Theta', 'FontSize', 20)
-title('Naive two NMFs Theta', 'FontSize', 20)
-subplot(224), imagesc(THETA3);
-axis('off');
-title('Coupled SNMF Theta', 'FontSize', 20)
-hold off;
+title('Roger''s Theta', 'FontSize', 20);
 
 
 % %% Output all errors of Theta

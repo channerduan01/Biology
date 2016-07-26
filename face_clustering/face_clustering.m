@@ -26,21 +26,10 @@ displayImages(W, size_img, 3, 'K-means centres', 1:size(H,2));
 fprintf('k-means correct rate: %f\n', purity(idx, lables));
 
 
-%% NMF clustering
-% [W,H,~] = mynmf(V,K,'verbose',1,'METHOD','ALS','ALPHA',1,'BETA',1,'MAX_ITER',80,'MIN_ITER',30);
-[W,H,~,~,~,~,~] = CoNMF_v2_separate(V, V, K, K ...
-        , 'MAX_ITER', 80, 'MIN_ITER', 80, 'VERBOSE', 0, 'METHOD', 'AS' ...
-        , 'W_COEF', 1, 'H_COEF', 1, 'T_COEF', 0.5, 'PATIENCE', 0.01 ...
-        );
-[~, idx] = max(H);
-displayImages(W, size_img, 3, 'NMF patterns', 1:size(H,2));
-fprintf('NMF correct rate: %f\n', purity(idx, lables));
-
-
-%% Co-NMF
+%%
 % create profile matrix
-girls_indices = [2,26,29,39];
-% girls_indices = [5,6,9,11,12,13,20,21,25,28,31,34,37];
+% girls_indices = [2,26,29,39];
+girls_indices = [5,6,9,11,12,13,20,21,25,28,31,34,37];
 H_info = zeros(2, size(V,2));
 for i = 1:size(V,2)
     if any(floor((i-1)/samples_num)+1 == girls_indices)
@@ -49,10 +38,29 @@ for i = 1:size(V,2)
         H_info(2,i) = 1;
     end
 end
+    % -------- permuted Proteins, keep annotation
+        ii = randperm(N);
+         % only activate random on MRNA or PROTEIN
+         % activate both means no permution!
+%         H_info(:,1:N) = H_info(:,ii);
+    % --------
+    
+    
+%% NMF clustering
+% [W,H,~] = mynmf(V,K,'verbose',1,'METHOD','ALS','ALPHA',1,'BETA',1,'MAX_ITER',80,'MIN_ITER',30);
+[W,H,~,~,~,~,~] = CoNMF_v2_separate(V, H_info, K, 2 ...
+        , 'MAX_ITER', 80, 'MIN_ITER', 80, 'VERBOSE', 0, 'METHOD', 'AS' ...
+        , 'W_COEF', 4, 'H_COEF', 4, 'T_COEF', 0, 'PATIENCE', 0.01 ...
+        );
+[~, idx] = max(H);
+displayImages(W, size_img, 3, 'NMF patterns', 1:size(H,2));
+fprintf('NMF correct rate: %f\n', purity(idx, lables));
 
+
+%% Co-NMF
 [W,H,W2_res,H2_res,Theta,~,~] = CoNMF_v4_flow(V, H_info, K, 2 ...
-    , 'MAX_ITER', 80, 'MIN_ITER', 20, 'VERBOSE', 0, 'METHOD', 'AS' ...
-    , 'W_COEF', 4, 'H_COEF', 4, 'T_COEF', 0.4, 'PATIENCE', 0.01 ...
+    , 'MAX_ITER', 80, 'MIN_ITER', 20, 'VERBOSE', 1, 'METHOD', 'AS' ...
+    , 'W_COEF', 4, 'H_COEF', 4, 'T_COEF', 0.8, 'PATIENCE', 0.01 ...
     );
 [~, idx] = max(H);
 [~,i] = sort(Theta);
