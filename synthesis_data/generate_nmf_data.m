@@ -9,14 +9,14 @@ clc
 
 addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 
-K = 6;
+K = 4;
 J = K;
 
-T = 30;
+T = 10;
 N = 1000;
 
-VALUE_RANGE_D = 1:3;
-VALUE_VARIANCE = 0.5;
+VALUE_RANGE_D = 1:2;
+VALUE_VARIANCE = 0.1;
 
 
 %%
@@ -97,10 +97,17 @@ title('Real THETA');
 % MRNA = MRNA + rand(size(MRNA))*4;
 
 % successful pattern ====
-% MRNA = MRNA + randn(size(MRNA))*0.2;
-% PROTEIN = PROTEIN + randn(size(PROTEIN))*4;
-% PROTEIN = PROTEIN + rand(size(PROTEIN))*4;
+% MRNA = MRNA + randn(size(MRNA))*0.5;
+% PROTEIN = PROTEIN + randn(size(PROTEIN))*3;
+% PROTEIN = PROTEIN + rand(size(PROTEIN))*3;
 % =======================
+
+amplitude = 3;
+MRNA = MRNA + randn(size(MRNA))*amplitude;
+MRNA = MRNA + rand(size(MRNA))*amplitude;
+PROTEIN = PROTEIN + randn(size(PROTEIN))*amplitude;
+PROTEIN = PROTEIN + rand(size(PROTEIN))*amplitude;
+
 
 % MRNA = MRNA + wgn(size(MRNA,1),size(MRNA,2),1)*1;
 % PROTEIN = PROTEIN + wgn(size(PROTEIN,1),size(PROTEIN,2),1)*1;

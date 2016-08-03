@@ -7,7 +7,7 @@ addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 method = 'BP';
 w_coef = 2;
 h_coef = 2;
-t_coef = 0.7;
+t_coef = 1;
 max_iter = 100;
 min_iter = 100;
 
@@ -87,7 +87,6 @@ end
 %     tic
 [RESULT_, best_result, err_num] = ...
     MyCoupleClusteringRepeat(MRNA, PROTEIN, K, J, 100, 0.1, true, REPEAT_NUM);
-
 for repeat_time = 1:REPEAT_NUM
     [~, idx1] = max(RESULT_{repeat_time}.Q);
     [~, idx2] = max(RESULT_{repeat_time}.Q_J);
@@ -97,8 +96,8 @@ for repeat_time = 1:REPEAT_NUM
     mrna_correct = purity(idx1, idx_mrna);
     protein_correct = purity(idx2, idx_protein);
     theta_error = norm(THETA_ORIGINAL-THETA3,'fro');
-    fprintf('Rogers''s theta-error: %f, mrna correct rate: %f, protein correct rate: %f\n', ...
-        theta_error, mrna_correct, protein_correct);
+    fprintf('Rogers''s theta-error: %f, mrna correct rate: %f, protein correct rate: %f, low_bound: %f\n', ...
+        theta_error, mrna_correct, protein_correct, RESULT_{repeat_time}.low_bound);
     RESULT_TABLE(repeat_time, 7:9) = [theta_error, mrna_correct, protein_correct];
 end
 [~, idx1] = max(best_result.Q);

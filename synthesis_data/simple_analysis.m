@@ -5,7 +5,7 @@ close all;
 
 addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 
-repeat_run = 20;
+repeat_run = 10;
 
 IDX_MATRIX_MRNA = zeros(2, N);
 IDX_MATRIX_PROTEIN = zeros(2, N);
@@ -50,8 +50,8 @@ toc
 %% Rogers statistic model
 tic
 index_ = 3;
-% [RESULT_, best_result, err_num] = ...
-%     MyCoupleClusteringRepeat(MRNA, PROTEIN, K, J, 100, 0.1, false, repeat_run);
+[RESULT_, best_result, err_num] = ...
+    MyCoupleClusteringRepeat(MRNA, PROTEIN, K, J, 100, 0.1, false, repeat_run);
 [~, idx1] = max(best_result.Q);
 IDX_MATRIX_MRNA(index_,:) = idx1;
 [~, idx2] = max(best_result.Q_J);

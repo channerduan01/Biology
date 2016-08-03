@@ -33,7 +33,7 @@ K = 15;
 J = 19;
 
 %% Consistency
-REPEAT = 20;
+REPEAT = 2;
 RESULT = cell(REPEAT,1);
 IDX_MATRIX_MRNA = zeros(REPEAT, N);
 IDX_MATRIX_PROTEIN = zeros(REPEAT, N);

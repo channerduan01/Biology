@@ -1,5 +1,5 @@
 function low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N)
-switch_on_protect = true;   % tricky, for scaling problem
+switch_on_protect = false;   % tricky, for scaling problem
 item1 = 0;
 item2 = 0;
 item456 = 0;

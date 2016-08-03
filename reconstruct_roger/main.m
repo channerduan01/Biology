@@ -142,7 +142,7 @@ ClusterAnalysis(ANALYSIS_PROTEIN_CLUSTER_IDX, Q, protein_clusters, MRNA, PROTEIN
 % subplot(122), imagesc(PROTEIN(:,gene_idxs1)');
 % hold off;
 
-%%
+%% choose best solution
 res = RESULT{1};
 for i = 2:REPEAPT
     if res.low_bound < RESULT{i}.low_bound

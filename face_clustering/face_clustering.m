@@ -11,7 +11,7 @@ faceDatabase = imageSet('/Users/channerduan/Desktop/Final_Project/codes/face_clu
 [images, subject_num, samples_num, size_img, lables] = dataLoad(faceDatabase,true);
 N = subject_num*samples_num;
 V = normalize(images');
-K = 40;
+K = 100;
 
 
 %% K-means clustering
@@ -49,7 +49,7 @@ end
 %% NMF clustering
 % [W,H,~] = mynmf(V,K,'verbose',1,'METHOD','ALS','ALPHA',1,'BETA',1,'MAX_ITER',80,'MIN_ITER',30);
 [W,H,~,~,~,~,~] = CoNMF_v2_separate(V, H_info, K, 2 ...
-        , 'MAX_ITER', 80, 'MIN_ITER', 80, 'VERBOSE', 0, 'METHOD', 'AS' ...
+        , 'MAX_ITER', 80, 'MIN_ITER', 80, 'VERBOSE', 0, 'METHOD', 'ALS' ...
         , 'W_COEF', 4, 'H_COEF', 4, 'T_COEF', 0, 'PATIENCE', 0.01 ...
         );
 [~, idx] = max(H);

@@ -8,7 +8,7 @@ clc
 addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 
 
-scene = 7;
+scene = 6;
 switch scene
     case 1 % this case cannot be separate by NMF, but easy for k-means
         m1=[4;4];
@@ -53,16 +53,16 @@ switch scene
         C2=[3,0;0,0];            
 end
 k = 2;
-N = 300;
-X1 = mvnrnd(m1, C1, N);
-X2 = mvnrnd(m2, C2, N);
+N = 80;
+X1 = abs(mvnrnd(m1, C1, N));
+X2 = abs(mvnrnd(m2, C2, N));
 X1 = X1 + randn(size(X1))*0.1;    % adding noise
 X2 = X2 + randn(size(X2))*0.1;    % adding noise
 
 X = [X1;X2];
 % NMF is sensitive to normalization!
 % X = normalize(X);
-X = normalize_v2(X')';
+% X = normalize_v2(X')';
 
 X1 = X(1:N,:);
 X2 = X(N+1:2*N,:);
@@ -115,21 +115,21 @@ end
 drawClusters(idx,centres,X,N,ii,'K-means');
 fprintf('k-means-cost: %f\n', cost(A,W,H));
 %% MU
-% [W,H,~] = mynmf(A,k,'verbose',0,'ALPHA',0,'BETA',0,'W_INIT',eye(k),'H_INIT',A);
-[W,H,~] = mynmf(A,k,'verbose',0,'ALPHA',2,'BETA',2);
-[~,idx] = max(H);
-drawClusters(idx',W',X,N,ii,'MU');
-fprintf('MU-cost: %f\n', cost(A,W,H));
-%% ALS
-[W,H,~] = mynmf(A,k,'METHOD','ALS','verbose',0,'ALPHA',1,'BETA',1);
-[~,idx] = max(H);
-drawClusters(idx',W',X,N,ii,'ALS');
-fprintf('ALS-cost: %f\n', cost(A,W,H));
+% % [W,H,~] = mynmf(A,k,'verbose',0,'ALPHA',0,'BETA',0,'W_INIT',eye(k),'H_INIT',A);
+% [W,H,~] = mynmf(A,k,'verbose',0,'ALPHA',2,'BETA',2);
+% [~,idx] = max(H);
+% drawClusters(idx',W',X,N,ii,'MU');
+% fprintf('MU-cost: %f\n', cost(A,W,H));
+% %% ALS
+% [W,H,~] = mynmf(A,k,'METHOD','ALS','verbose',0,'ALPHA',1,'BETA',1);
+% [~,idx] = max(H);
+% drawClusters(idx',W',X,N,ii,'ALS');
+% fprintf('ALS-cost: %f\n', cost(A,W,H));
 %% SNMF
 [W,H,iter,HIS] = nmf(A,k,'type','regularized','nnls_solver','bp','verbose',0,'ALPHA',1,'BETA',1);
 [~,idx] = max(H);
 % disp([norm(W,'fro'),norm(H,'fro')]);
-drawClusters(idx',W',X,N,ii,'BP');
+drawClusters(idx',W',X,N,ii,'NMF(BP)');
 fprintf('BP-cost: %f\n', cost(A,W,H));
 
 % %% NMFSC
