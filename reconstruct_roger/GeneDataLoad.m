@@ -9,5 +9,6 @@ P1 = data{2};
 MRNA = normalize(MRNA)';
 PROTEIN = normalize(P1(:,2:7))';
 PROTEIN_ORIGINAL = normalize(P1)';
-[T,N] = size(MRNA);
+[T1,N] = size(MRNA);
+[T2,~] = size(PROTEIN);
 names = names;

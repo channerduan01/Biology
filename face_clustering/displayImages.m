@@ -3,6 +3,8 @@ function displayImages(dataset, original_image_size, zoom_scale, str_title, imag
     real_image_size = floor(original_image_size/zoom_scale);
     dim = size(dataset,2);
     display_rows = floor(sqrt(dim));
+    
+%     display_rows = 5; % just for show
     display_cols = ceil(dim / display_rows);
     display_array = -1 * zeros(pad + display_rows * (real_image_size(1) + pad), pad + display_cols * (real_image_size(2) + pad));
     for j = 1:display_rows
@@ -19,6 +21,6 @@ function displayImages(dataset, original_image_size, zoom_scale, str_title, imag
     colormap(gray);
     imagesc(display_array,[0,1]);
     axis('off');
-    axis('equal');
+%     axis('equal');
     title(str_title, 'FontSize', 20);
 end

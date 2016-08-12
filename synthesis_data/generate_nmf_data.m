@@ -9,14 +9,14 @@ clc
 
 addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 
-K = 4;
+K = 5;
 J = K;
 
 T = 10;
 N = 1000;
 
-VALUE_RANGE_D = 1:2;
-VALUE_VARIANCE = 0.1;
+VALUE_RANGE_D = 2:3;
+VALUE_VARIANCE = 0.2;
 
 
 %%
@@ -58,6 +58,8 @@ for k = 1:K
     MRNA(:, range(K,N,k)) = mvnrnd(AVG_K_(:,k)', COV_K_(:,:,k), length(range(K,N,k)))';
     PROTEIN(:, range(K,N,k)) = mvnrnd(AVG_J_(:,k_)', COV_J_(:,:,k_), length(range(K,N,k)))';    
 end
+MRNA(MRNA<0) = 0;
+PROTEIN(PROTEIN<0) = 0;
 
 % Calculate relationship between mRNA and protein
 H1_ORIGINAL = zeros(K, N);
@@ -102,11 +104,9 @@ title('Real THETA');
 % PROTEIN = PROTEIN + rand(size(PROTEIN))*3;
 % =======================
 
-amplitude = 3;
-MRNA = MRNA + randn(size(MRNA))*amplitude;
-MRNA = MRNA + rand(size(MRNA))*amplitude;
-PROTEIN = PROTEIN + randn(size(PROTEIN))*amplitude;
-PROTEIN = PROTEIN + rand(size(PROTEIN))*amplitude;
+% amplitude = 3;
+% MRNA = MRNA + rand(size(MRNA))*amplitude;
+% PROTEIN = PROTEIN + rand(size(PROTEIN))*amplitude;
 
 
 % MRNA = MRNA + wgn(size(MRNA,1),size(MRNA,2),1)*1;

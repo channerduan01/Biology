@@ -1,7 +1,7 @@
 %%
 % Final version of my work!!!
 %
-function [W1,H1,W2,H2,THETA1,HIS,last_iter] = CoNMF_v4_flow(MRNA, PROTEIN, K, J, varargin)
+function [W1,H1,W2,H2,THETA1,HIS,last_iter,new_cost] = CoNMF_v4_flow(MRNA, PROTEIN, K, J, varargin)
 
 % default values of parameters
 par.method = 'MU';
@@ -102,6 +102,8 @@ for last_iter = 1:par.max_iter
     % test ======
 %     WaveForH2 = zeros(size(WaveForH2));
 %     WaveForH1 = zeros(size(WaveForH1));
+%     WaveForH2 = repmat(mean(H2,2),1,N);
+%     WaveForH1 = repmat(mean(H1,2),1,N);     
 %     WaveForH2 = 1.5* ones(size(WaveForH2));
 %     WaveForH1 = 1.5* ones(size(WaveForH1));
     % ===========
@@ -178,6 +180,7 @@ end
 function [C, tk, tj] = updateTheta(H1, H2, K, J, N)
 H1 = normalizeColumn(H1);
 H2 = normalizeColumn(H2);
+
 C = H1*H2';
 C = C ./ N;
 tk = zeros(K,J);
@@ -195,15 +198,16 @@ tj(isnan(tj)) = 0;
 end
 
 function record = calcuCost(V1,W1,H1,V2,W2,H2,THETA1,THETA2)
-cost = @(V,W,H) sqrt(sum(sum((V-W*H).^2)));
+cost = @(V,W,H) norm(V-W*H,'fro');
+
 a = cost(V1,W1,H1);
 b = cost(V2,W2,H2);
 % for test =========
 % c = 0;
 % d = 0;
 % ==================
-c = norm((H1'*THETA1)'-H2,'fro');
-d = norm((H2'*THETA2)'-H1,'fro');
+c = norm((H1'*THETA1)'-normalizeColumn(H2),'fro');
+d = norm((H2'*THETA2)'-normalizeColumn(H1),'fro');
 record = [a b c d];
 end
 

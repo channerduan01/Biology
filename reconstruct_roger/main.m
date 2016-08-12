@@ -4,7 +4,17 @@
 close all
 clc
 clear
-[MRNA, PROTEIN, PROTEIN_ORIGINAL, T, N, names] = GeneDataLoad();
+
+load hmec;
+MRNA = data{1};
+P1 = data{2};
+MRNA = normalize(MRNA)';
+PROTEIN = normalize(P1(:,2:7))';
+PROTEIN_ORIGINAL = normalize(P1)';
+PROTEIN = PROTEIN_ORIGINAL; % improve
+[T1,N] = size(MRNA);
+[T2,~] = size(PROTEIN);
+
 K = 15;
 J = 19;
 
@@ -74,16 +84,16 @@ while true
     index = index + 1;
     if index > REPEAPT, break;end
     fprintf('\n\nstart round %d >>>>>>', index);
-    try
+%     try
         [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,HIS] = ...
             MyCoupleClustering(MRNA, PROTEIN, K, J, MAX_ITER, patience, true);
         [THETA_reverse, entropy_j_k, entropy_k_j] = EntropyCalculate(K, J, PI_K, THETA);
-        [R_J, Q_J] = CalcuSubclusterBelonging(MRNA, AVG_K, VARIANCE_K, PROTEIN, AVG_J, VARIANCE_J, PI_K, THETA_reverse, R, K, J, N, T);
-        low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N);
-    catch ME
-        low_bound = NaN;
-        fprintf('error!!!\n')
-    end
+        [R_J, Q_J] = CalcuSubclusterBelonging(MRNA, AVG_K, VARIANCE_K, PROTEIN, AVG_J, VARIANCE_J, PI_K, THETA_reverse, R, K, J, N, T1, T2);
+        low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T1,T2,N);
+%     catch ME
+%         low_bound = NaN;
+%         fprintf('error!!!\n')
+%     end
     if isnan(low_bound) || low_bound == -Inf || low_bound == Inf
         error_result_num = error_result_num + 1;
         index = index - 1;

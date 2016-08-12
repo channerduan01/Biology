@@ -1,6 +1,7 @@
 function [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,HIS] = ...
     MyCoupleClustering(MRNA, PROTEIN, K, J, MAX_ITER, patience, b_verbose)
-[T,N] = size(MRNA);
+[T1,N] = size(MRNA);
+[T2,~] = size(PROTEIN);
 % init parameters
 % alternative way to initialize, worse way~
 %     Q = rand(K, N);
@@ -26,18 +27,18 @@ VARIANCE_K = ones(K, 1)*mean(var(MRNA,0,2));
 ii = randperm(N);
 AVG_J = PROTEIN(:,ii(1:J));
 VARIANCE_J = ones(J, 1)*mean(var(PROTEIN,0,2));
-[Q,R] = Expectation(PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N);
+[Q,R] = Expectation(PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T1,T2,N);
 
 % start optimization
 HIS = zeros(MAX_ITER+1,1);
-low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N);
+low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T1,T2,N);
 if isnan(low_bound), throw(MException('MyCoupleClustering:Nan','Nan value!!!')); end
 HIS(1,1) = low_bound;
 last_low_bound = low_bound;
 for iter = 1:MAX_ITER
-    [Q,R] = Expectation(PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N);
-    [PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = Maximum(Q,R,MRNA,PROTEIN,K,J,T,N);
-    low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N);
+    [Q,R] = Expectation(PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T1,T2,N);
+    [PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = Maximum(Q,R,MRNA,PROTEIN,K,J,T1,T2,N);
+    low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T1,T2,N);
     if isnan(low_bound), throw(MException('MyCoupleClustering:Nan','Nan value!!!')); end
     HIS(iter+1,1) = low_bound;
     step = low_bound-last_low_bound;
@@ -62,11 +63,11 @@ for k = 1:K
 end
 end
 
-function [PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = Maximum(Q,R,MRNA,PROTEIN,K,J,T,N)
+function [PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = Maximum(Q,R,MRNA,PROTEIN,K,J,T1,T2,N)
 PI_K = sum(Q,2)/N;
-AVG_K = zeros(T, K);
+AVG_K = zeros(T1, K);
 for k = 1:K
-    sum_ = zeros(T,1);
+    sum_ = zeros(T1,1);
     for i = 1:N
         sum_ = sum_ + MRNA(:,i)*Q(k,i);
     end
@@ -78,7 +79,7 @@ for k = 1:K
     for i = 1:N
         sum_ = sum_ + sum((MRNA(:,i)-AVG_K(:,k)).^2)*Q(k,i);
     end
-    VARIANCE_K(k) = sum_/(T*sum(Q(k,:)));
+    VARIANCE_K(k) = sum_/(T1*sum(Q(k,:)));
 end
 THETA = zeros(K, J);
 for k = 1:K
@@ -91,9 +92,9 @@ for k = 1:K
         end
     end
 end
-AVG_J = zeros(T, J);
+AVG_J = zeros(T2, J);
 for j = 1:J
-    sum_1 = zeros(T,1);
+    sum_1 = zeros(T2,1);
     sum_2 = 0;
     for k = 1:K
         for i = 1:N
@@ -113,17 +114,17 @@ for j = 1:J
             sum_2 = sum_2 + R(j,i,k)*Q(k,i);
         end
     end
-    VARIANCE_J(j) = sum_1/(T*sum_2);
+    VARIANCE_J(j) = sum_1/(T2*sum_2);
 end
 end
 
-function [Q,R] = Expectation(PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N)
+function [Q,R] = Expectation(PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T1,T2,N)
 Q = zeros(K, N);
 R = zeros(J, N, K);
 TMP_J_SUM_MATRIX = zeros(K, N);
 for k = 1:K
     for j = 1:J
-        R(j,:,k) = MyMvnpdf(PROTEIN',AVG_J(:,j)',VARIANCE_J(j)*eye(T))'*THETA(k,j);
+        R(j,:,k) = MyMvnpdf(PROTEIN',AVG_J(:,j)',VARIANCE_J(j)*eye(T2))'*THETA(k,j);
     end
     for i = 1:N
         TMP_J_SUM_MATRIX(k,i) = sum(R(:,i,k));
@@ -131,7 +132,7 @@ for k = 1:K
     end
 end
 for k = 1:K
-    Q(k,:) = MyMvnpdf(MRNA',AVG_K(:,k)',VARIANCE_K(k)*eye(T))'*PI_K(k).*TMP_J_SUM_MATRIX(k,:);
+    Q(k,:) = MyMvnpdf(MRNA',AVG_K(:,k)',VARIANCE_K(k)*eye(T1))'*PI_K(k).*TMP_J_SUM_MATRIX(k,:);
 end
 for i = 1:N
     Q(:,i) = Q(:,i)/sum(Q(:,i));

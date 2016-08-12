@@ -7,6 +7,8 @@ for i = 1:n
     result(i) = sparse(v(:,i),m);
 end
 
+result = result(~isnan(result));
+
 end
 
 function value = sparse(v, m)

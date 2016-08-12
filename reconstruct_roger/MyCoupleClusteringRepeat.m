@@ -1,6 +1,7 @@
 function [RESULT, best_result, error_result_num] = ...
     MyCoupleClusteringRepeat(MRNA, PROTEIN, K, J, MAX_ITER, patience, b_verbose, REPEAT)
-[T, N] = size(MRNA);
+[T1, N] = size(MRNA);
+[T2, ~] = size(PROTEIN);
 RESULT = cell(REPEAT,1);
 index = 0;
 error_result_num = 0;
@@ -17,8 +18,8 @@ while true
         [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J] = ...
             MyCoupleClustering(MRNA, PROTEIN, K, J, MAX_ITER, patience, b_verbose);
         [THETA_reverse, entropy_j_k, entropy_k_j] = EntropyCalculate(K, J, PI_K, THETA);
-        [R_J, Q_J] = CalcuSubclusterBelonging(MRNA, AVG_K, VARIANCE_K, PROTEIN, AVG_J, VARIANCE_J, PI_K, THETA_reverse, R, K, J, N, T);
-        low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N);
+        [R_J, Q_J] = CalcuSubclusterBelonging(MRNA, AVG_K, VARIANCE_K, PROTEIN, AVG_J, VARIANCE_J, PI_K, THETA_reverse, R, K, J, N, T1, T2);
+        low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T1,T2,N);
     catch ME
         low_bound = NaN;
         fprintf('error: %s\n', getReport(ME))

@@ -11,7 +11,7 @@ faceDatabase = imageSet('/Users/channerduan/Desktop/Final_Project/codes/face_clu
 [images, subject_num, samples_num, size_img, lables] = dataLoad(faceDatabase,true);
 N = subject_num*samples_num;
 V = normalize(images');
-K = 100;
+K = 40;
 
 
 %% K-means clustering
@@ -22,7 +22,8 @@ for i = 1:length(idx)
     H(idx(i),i) = 1;
 end
 
-displayImages(W, size_img, 3, 'K-means centres', 1:size(H,2));
+title = sprintf('K-means centres\nW-sparsity: %.2f, H-sparsity: %.2f', mean(sparsity(W)), mean(sparsity(H)));
+displayImages(W, size_img, 3,title, 1:size(H,2));
 fprintf('k-means correct rate: %f\n', purity(idx, lables));
 
 
@@ -49,22 +50,24 @@ end
 %% NMF clustering
 % [W,H,~] = mynmf(V,K,'verbose',1,'METHOD','ALS','ALPHA',1,'BETA',1,'MAX_ITER',80,'MIN_ITER',30);
 [W,H,~,~,~,~,~] = CoNMF_v2_separate(V, H_info, K, 2 ...
-        , 'MAX_ITER', 80, 'MIN_ITER', 80, 'VERBOSE', 0, 'METHOD', 'ALS' ...
-        , 'W_COEF', 4, 'H_COEF', 4, 'T_COEF', 0, 'PATIENCE', 0.01 ...
+        , 'MAX_ITER', 80, 'MIN_ITER', 20, 'VERBOSE', 1, 'METHOD', 'BP' ...
+        , 'W_COEF', 1, 'H_COEF', 1, 'T_COEF', 0, 'PATIENCE', 0.01 ...
         );
 [~, idx] = max(H);
-displayImages(W, size_img, 3, 'NMF patterns', 1:size(H,2));
+title = sprintf('NMF(BP) patterns\nW-sparsity: %.2f, H-sparsity: %.2f', mean(sparsity(W)), mean(sparsity(H)));
+displayImages(W, size_img, 3,title, 1:size(H,2));
 fprintf('NMF correct rate: %f\n', purity(idx, lables));
 
 
 %% Co-NMF
 [W,H,W2_res,H2_res,Theta,~,~] = CoNMF_v4_flow(V, H_info, K, 2 ...
-    , 'MAX_ITER', 80, 'MIN_ITER', 20, 'VERBOSE', 1, 'METHOD', 'AS' ...
-    , 'W_COEF', 4, 'H_COEF', 4, 'T_COEF', 0.8, 'PATIENCE', 0.01 ...
+    , 'MAX_ITER', 8, 'MIN_ITER', 20, 'VERBOSE', 1, 'METHOD', 'SBP' ...
+    , 'W_COEF', 0.01, 'H_COEF', 0.1, 'T_COEF', 0.8, 'PATIENCE', 0.01 ...
     );
 [~, idx] = max(H);
 [~,i] = sort(Theta);
-displayImages(W, size_img, 3, 'Co-NMF patterns girls positive', i(:,1));
+title = sprintf('Coupled NMF patterns\nW-sparsity: %.2f H-sparsity: %.2f', mean(sparsity(W)), mean(sparsity(H)));
+displayImages(W, size_img, 3,title, 1:size(H,2));
 fprintf('Co-NMF correct rate: %f\n', purity(idx, lables));
 
 

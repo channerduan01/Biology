@@ -8,7 +8,7 @@ clc
 addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
 
 
-scene = 6;
+scene = 1;
 switch scene
     case 1 % this case cannot be separate by NMF, but easy for k-means
         m1=[4;4];
@@ -125,18 +125,17 @@ fprintf('k-means-cost: %f\n', cost(A,W,H));
 % [~,idx] = max(H);
 % drawClusters(idx',W',X,N,ii,'ALS');
 % fprintf('ALS-cost: %f\n', cost(A,W,H));
-%% SNMF
-[W,H,iter,HIS] = nmf(A,k,'type','regularized','nnls_solver','bp','verbose',0,'ALPHA',1,'BETA',1);
-[~,idx] = max(H);
-% disp([norm(W,'fro'),norm(H,'fro')]);
-drawClusters(idx',W',X,N,ii,'NMF(BP)');
-fprintf('BP-cost: %f\n', cost(A,W,H));
-
-% %% NMFSC
-% [W,H,~] = mynmf(A,k,'METHOD','NMFSC','verbose',1,'ALPHA',1,'BETA',1,'RATE',0.5, 'MAX_ITER',3);
+% %% SNMF
+% [W,H,iter,HIS] = nmf(A,k,'type','regularized','nnls_solver','bp','verbose',0,'ALPHA',1,'BETA',1);
 % [~,idx] = max(H);
-% drawClusters(idx',W',X,N,ii,'NMFSC')
-% cost(A,W,H)
+% % disp([norm(W,'fro'),norm(H,'fro')]);
+% drawClusters(idx',W',X,N,ii,'NMF(BP)');
+% fprintf('BP-cost: %f\n', cost(A,W,H));
+%% NMFSC
+[W,H,~] = mynmf(A,k,'METHOD','NMFSC','verbose',1,'ALPHA',1,'BETA',1,'RATE',0.5, 'MAX_ITER',80);
+[~,idx] = max(H);
+drawClusters(idx',W',X,N,ii,'NMFSC')
+cost(A,W,H)
 
 %% SVD ,,, cool!
 % % information is reducing quicker and quicker while giving energy up

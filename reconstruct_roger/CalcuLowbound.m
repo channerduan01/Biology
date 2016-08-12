@@ -1,4 +1,4 @@
-function low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T,N)
+function low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T1,T2,N)
 switch_on_protect = false;   % tricky, for scaling problem
 item1 = 0;
 item2 = 0;
@@ -6,9 +6,9 @@ item456 = 0;
 LOG_DENSITY_J = zeros(J,N);
 for j = 1:J
     if switch_on_protect
-        LOG_DENSITY_J(j,:) = MyMvnpdf(PROTEIN',AVG_J(:,j)',VARIANCE_J(j)*eye(T));
+        LOG_DENSITY_J(j,:) = MyMvnpdf(PROTEIN',AVG_J(:,j)',VARIANCE_J(j)*eye(T2));
     else
-        LOG_DENSITY_J(j,:) = log(MyMvnpdf(PROTEIN',AVG_J(:,j)',VARIANCE_J(j)*eye(T)));
+        LOG_DENSITY_J(j,:) = log(MyMvnpdf(PROTEIN',AVG_J(:,j)',VARIANCE_J(j)*eye(T2)));
     end
 end
 for i = 1:N
@@ -34,9 +34,9 @@ end
 item3 = 0;
 for k = 1:K
     if switch_on_protect
-        item3 = item3 + sum(MyMvnpdf(MRNA',AVG_K(:,k)',VARIANCE_K(k)*eye(T))'.*Q(k,:));
+        item3 = item3 + sum(MyMvnpdf(MRNA',AVG_K(:,k)',VARIANCE_K(k)*eye(T1))'.*Q(k,:));
     else
-        item3 = item3 + sum(log(MyMvnpdf(MRNA',AVG_K(:,k)',VARIANCE_K(k)*eye(T)))'.*Q(k,:));
+        item3 = item3 + sum(log(MyMvnpdf(MRNA',AVG_K(:,k)',VARIANCE_K(k)*eye(T1)))'.*Q(k,:));
     end
 end
 
