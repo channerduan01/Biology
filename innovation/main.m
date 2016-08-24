@@ -11,7 +11,7 @@ load hmec;
 MRNA = data{1};
 P1 = data{2};
 MRNA = MRNA';
-PROTEIN = P1(:,2:7)';
+PROTEIN = P1(:,1:7)';
 PROTEIN_ORIGINAL = P1';
 % different normalization methods, matters a lot!
 MRNA = normalize(MRNA);
@@ -33,7 +33,7 @@ K = 15;
 J = 19;
 
 %% Consistency
-REPEAT = 2;
+REPEAT = 10;
 RESULT = cell(REPEAT,1);
 IDX_MATRIX_MRNA = zeros(REPEAT, N);
 IDX_MATRIX_PROTEIN = zeros(REPEAT, N);
@@ -42,12 +42,16 @@ i = 0;
 HIS = zeros(REPEAT, 4);
 
 % configuration
-wCoef = 0.1;
-hCoef = 0.1;
 min_iter = 20;
-max_iter = 200;
+max_iter = 100;
 
 while true
+%     %     -------- permuted Proteins, keep annotation
+%         ii = randperm(N);
+% %         MRNA(:,1:N) = MRNA(:,ii);
+%         PROTEIN(:,1:N) = PROTEIN(:,ii);
+% %     --------
+    
     i = i + 1;
     if i > REPEAT, break; end
     fprintf('process-iter >>>>>> %d\n', i);
@@ -61,12 +65,12 @@ while true
     %     Theta = CalcuTheta(H1_res, H2_res, K, J, N);
     [W1_res,H1_res,W2_res,H2_res,Theta,HIS,last_iter] = CoNMF_v4_flow(MRNA, PROTEIN, K, J ...
         , 'MAX_ITER', max_iter, 'MIN_ITER', min_iter, 'VERBOSE', 1, 'METHOD', 'BP' ...
-        , 'W_COEF', wCoef, 'H_COEF', hCoef, 'T_COEF', 0.5, 'PATIENCE', 0.0001 ...
+        , 'W_COEF', 1, 'H_COEF', 1, 'T_COEF', 1, 'PATIENCE', 10 ...
         );
-    RESULT{i} = struct('W1',W1_res,'H1',H1_res,'W2',W2_res,'H2',H2_res, ...
-        'Theta',Theta,'HIS',HIS,'last_iter',last_iter);
-    
-    if sum(sum(isnan(Theta))) > 0
+    PI_K = sum(normalizeColumn(H1_res),2)/N;
+    [THETA_reverse, entropy_j_k, entropy_k_j] = EntropyCalculate(K, J, PI_K, Theta);
+    entropy_j_k
+    if sum(sum(isnan(Theta))) || isnan(entropy_j_k) > 0
         err_num = err_num+1;
         i = i - 1;
         continue;
@@ -81,6 +85,10 @@ while true
     IDX_MATRIX_MRNA(i,:) = idx;
     [~, idx] = max(H2_res);
     IDX_MATRIX_PROTEIN(i,:) = idx;
+
+    RESULT{i} = struct('W1',W1_res,'H1',H1_res,'W2',W2_res,'H2',H2_res, ...
+        'entropy_j_k',entropy_j_k,'entropy_k_j',entropy_k_j, ...
+        'Theta',Theta,'HIS',HIS,'last_iter',last_iter);
 end
 
 if REPEAT > 1
@@ -117,7 +125,17 @@ for i = 1:N
 end
 
 SELETION_THRESHOLD = 0.5;
-[mrna_clusters, protein_clusters] = CalcuClusterExtent(K, J, N, H1_res, H2_res, SELETION_THRESHOLD);
+% [mrna_clusters, protein_clusters] = CalcuClusterExtent(K, J, N, H1_res, H2_res, SELETION_THRESHOLD);
+[~, idx] = max(H1_res);
+mrna_clusters = cell(K,1);
+for k = 1:K
+    mrna_clusters{k} = find(idx==k);
+end
+[~, idx] = max(H2_res);
+protein_clusters = cell(J,1);
+for j = 1:J
+    protein_clusters{j} = find(idx==j);
+end
 
 OutputClustersNM(K, J, mrna_clusters, protein_clusters, true, names);
 ANALYSIS_PROTEIN_CLUSTER_IDX = 5;

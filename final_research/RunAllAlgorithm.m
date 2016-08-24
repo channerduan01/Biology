@@ -1,30 +1,35 @@
 %%
-% Methods comparison
+% Tricky one, run all algorithms 
 
-close all;
-addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
-
-
+function [RESULT_TABLE, BEST_RESULT_TABLE, ERROR_NUM] ...
+    = RunAllAlgorithm(REPEAT_NUM, MRNA, PROTEIN, THETA_ORIGINAL, H1_ORIGINAL, H2_ORIGINAL, K, J, T, N, bSHOW, ...
+    thresholdRogers)
+% basic init
 max_iter = 100;
 min_iter = 20;
 
 [~, idx_mrna] = max(H1_ORIGINAL);
 [~, idx_protein] = max(H2_ORIGINAL);
 
-REPEAT_NUM = 20;
 RESULT_TABLE = zeros(REPEAT_NUM, 4*5);
-iter_used = zeros(REPEAT_NUM, 3);
+BEST_RESULT_TABLE = zeros(4, 3);
+ERROR_NUM = zeros(4, 1);
 
 IDX_MATRIX_MRNA = zeros(REPEAT_NUM, N, 4);
 IDX_MATRIX_PROTEIN = zeros(REPEAT_NUM, N, 4);
 
-%% benchmark, k-means
-%     tic
+% benchmark, double k-means
 RESULT_KMEAN = cell(REPEAT_NUM,1);
 for repeat_time = 1:REPEAT_NUM
+    if bSHOW
     fprintf('\n k-means run on %d >>>>>>\n', repeat_time);
+    end
     repeat_run = 1;
+    if bSHOW
     opts = statset('Display','final');
+    else
+    opts = statset();
+    end
     [idx1,W1] = kmeans(MRNA',K,'Replicates',repeat_run,'Options',opts,'Start','sample');
     W1 = W1';
     H1 = zeros(K,length(idx1));
@@ -47,8 +52,10 @@ for repeat_time = 1:REPEAT_NUM
     mrna_correct = purity(idx1, idx_mrna);
     protein_correct = purity(idx2, idx_protein);
     theta_error = norm(THETA_ORIGINAL-THETA1,'fro');
+    if bSHOW
     fprintf('k-means theta-error: %f, mrna correct rate: %f, protein correct rate: %f, total_cost: %f\n', ...
         theta_error, mrna_correct, protein_correct, total_cost);
+    end
     RESULT_KMEAN{repeat_time} = struct('total_cost',total_cost,'mrna_correct',mrna_correct, ...
         'protein_correct', protein_correct, 'theta_error',theta_error, 'theta', THETA1);
     RESULT_TABLE(repeat_time, 1:5) = [theta_error, mrna_correct, protein_correct, mean(sparsity(H1)), mean(sparsity(H2))];
@@ -61,21 +68,14 @@ for repeat_time = 2:REPEAT_NUM
 end
 THETA1 = RESULT_KMEAN{best_kmeans_idx}.theta;
 
-%     toc
-
-%% NMF innovative model, two stage
-%     tic
+% benchmark, double NMF
 RESULT_DNMF = cell(REPEAT_NUM,1);
 repeat_time = 1;
+error_result_num = 0;
 while true
+    if bSHOW
     fprintf('\n double NMF run on %d >>>>>>\n', repeat_time);
-    index_ = 3;
-%     [W1,H1,W2,H2,~,HIS,last_iter] = ...
-%         CoNMF_v2_separate(MRNA, PROTEIN, K, J ...
-%         , 'W_COEF', w_coef, 'H_COEF', h_coef, 'T_COEF', t_coef ...
-%         , 'VERBOSE', 0, 'METHOD', method ...
-%         , 'MIN_ITER', min_iter, 'MAX_ITER', max_iter ...
-%         );
+    end
     [W1,H1,W2,H2,~,HIS,last_iter] = ...
         CoNMF_v2_separate(MRNA, PROTEIN, K, J ...
         , 'W_COEF', 0.2, 'H_COEF', 0.2 ...
@@ -83,7 +83,6 @@ while true
         , 'MIN_ITER', min_iter, 'MAX_ITER', max_iter ...
         );    
     total_cost = sum(HIS(last_iter+1,1:2));
-    iter_used(repeat_time, 1) = iter_used(repeat_time, 1) + last_iter;
     [~, idx1] = max(H1);
     [~, idx2] = max(H2);
     IDX_MATRIX_MRNA(repeat_time,:,2) = idx1;
@@ -95,16 +94,24 @@ while true
     protein_correct = purity(idx2, idx_protein);
     theta_error = norm(THETA_ORIGINAL-THETA2,'fro');
     if isnan(total_cost) || sum(isnan(theta_error)) > 0
+        error_result_num = error_result_num + 1;
+        if error_result_num > REPEAT_NUM
+            throw(MException('Coupled NMF:failed','Too many errors!!!'));
+        end
        continue; 
     end
+    if bSHOW
     fprintf('Naive NMFs theta-error: %f, mrna correct rate: %f, protein correct rate: %f, total_cost: %f\n', ...
         theta_error, mrna_correct, protein_correct, total_cost);
+    end
     RESULT_DNMF{repeat_time} = struct('total_cost',total_cost,'mrna_correct',mrna_correct, ...
         'protein_correct', protein_correct, 'theta_error',theta_error, 'theta', THETA2);
     RESULT_TABLE(repeat_time, 6:10) = [theta_error, mrna_correct, protein_correct, mean(sparsity(H1)), mean(sparsity(H2))];
     repeat_time = repeat_time + 1;
     if repeat_time > REPEAT_NUM, break; end
 end
+ERROR_NUM(2) = error_result_num;
+
 best_dnmf_idx = 1;
 for repeat_time = 2:REPEAT_NUM
     if RESULT_DNMF{repeat_time}.total_cost < RESULT_DNMF{best_dnmf_idx}.total_cost
@@ -112,13 +119,10 @@ for repeat_time = 2:REPEAT_NUM
     end
 end
 THETA2 = RESULT_DNMF{best_dnmf_idx}.theta;
-%     toc
 
-%% Rogers's model
-% THETA3 = THETA2, best_rogers_idx = 1; % just for test
-%     tic
-[RESULT_, best_result, err_num] = ...
-    MyCoupleClusteringRepeat(MRNA, PROTEIN, K, J, 100, 5, true, REPEAT_NUM);
+% coupled Rogers
+[RESULT_, best_result, error_result_num] = ...
+    MyCoupleClusteringRepeat(MRNA, PROTEIN, K, J, 100, thresholdRogers, bSHOW, REPEAT_NUM);
 for repeat_time = 1:REPEAT_NUM
     [~, idx1] = max(RESULT_{repeat_time}.Q);
     [~, idx2] = max(RESULT_{repeat_time}.Q_J);
@@ -128,12 +132,16 @@ for repeat_time = 1:REPEAT_NUM
     mrna_correct = purity(idx1, idx_mrna);
     protein_correct = purity(idx2, idx_protein);
     theta_error = norm(THETA_ORIGINAL-THETA3,'fro');
+    if bSHOW
     fprintf('Rogers''s theta-error: %f, mrna correct rate: %f, protein correct rate: %f, low_bound: %f\n', ...
         theta_error, mrna_correct, protein_correct, RESULT_{repeat_time}.low_bound);
     fprintf('%f\n', mrna_correct+protein_correct);
+    end
     RESULT_TABLE(repeat_time, 11:15) = [theta_error, mrna_correct, protein_correct, ...
         mean(sparsity(RESULT_{repeat_time}.Q)), mean(sparsity(RESULT_{repeat_time}.Q_J))];
 end
+ERROR_NUM(3) = error_result_num;
+
 [~, idx1] = max(best_result.Q);
 [~, idx2] = max(best_result.Q_J);
 THETA3 = ArrangeTheta(idx_mrna, idx1, idx_protein, idx2, best_result.THETA, K, J);
@@ -145,14 +153,14 @@ for repeat_time = 1:REPEAT_NUM
     end
 end
 
-%     toc
-
-%% innovative model, My own coupled NMF
-%     tic
+% coupled NMF
 RESULT_CNMF = cell(REPEAT_NUM,1);
 repeat_time = 1;
+error_result_num = 0;
 while true
+    if bSHOW
     fprintf('\n Coupled NMF run on %d >>>>>>\n', repeat_time);
+    end
     MRNA_ = MRNA;
     PROTEIN_ = PROTEIN;
     idx_mrna_ = idx_mrna;
@@ -178,23 +186,29 @@ while true
     IDX_MATRIX_MRNA(repeat_time,:,4) = idx1;
     IDX_MATRIX_PROTEIN(repeat_time,:,4) = idx2;
     total_cost = sum(HIS(last_iter+1,1:2));
-    iter_used(repeat_time, 3) = iter_used(repeat_time, 3) + last_iter;
     % recover THETA to original order!
     THETA4 = ArrangeTheta(idx_mrna_, idx1, idx_protein_, idx2, THETA4, K, J);
     mrna_correct = purity(idx1, idx_mrna_);
     protein_correct = purity(idx2, idx_protein_);
     theta_error = norm(THETA_ORIGINAL-THETA4,'fro');
     if isnan(total_cost) || sum(isnan(theta_error)) > 0
+        error_result_num = error_result_num + 1;
+        if error_result_num > REPEAT_NUM
+            throw(MException('Coupled NMF:failed','Too many errors!!!'));
+        end
        continue; 
     end
+    if bSHOW
     fprintf('Coupled NMFs cost: %f, theta-error: %f, mrna correct rate: %f, protein correct rate: %f, total_cost: %f\n', ...
         cost_nmf, theta_error, mrna_correct, protein_correct, total_cost);
+    end
     RESULT_CNMF{repeat_time} = struct('total_cost',total_cost,'mrna_correct',mrna_correct, ...
         'protein_correct', protein_correct, 'theta_error',theta_error, 'theta', THETA4);
     RESULT_TABLE(repeat_time, 16:20) = [theta_error, mrna_correct, protein_correct, mean(sparsity(H1)), mean(sparsity(H2))];
     repeat_time = repeat_time + 1;
     if repeat_time > REPEAT_NUM, break; end
 end
+ERROR_NUM(4) = error_result_num;
 
 best_cnmf_idx = 1;
 for repeat_time = 2:REPEAT_NUM
@@ -203,93 +217,14 @@ for repeat_time = 2:REPEAT_NUM
     end
 end
 THETA4 = RESULT_CNMF{best_cnmf_idx}.theta;
-%     toc
 
 
-% %% real coupled k-means
-%     [W1,H1,W2,H2,THETA6,cost_] = ...
-%         CoupledKmeans(MRNA_, PROTEIN_, K, J, 0.9, 30);
+BEST_RESULT_TABLE(1, :) = [RESULT_TABLE(best_kmeans_idx, 2), RESULT_TABLE(best_kmeans_idx, 3), RESULT_TABLE(best_kmeans_idx, 1)];
+BEST_RESULT_TABLE(2, :) = [RESULT_TABLE(best_kmeans_idx, 7), RESULT_TABLE(best_kmeans_idx, 8), RESULT_TABLE(best_kmeans_idx, 6)];
+BEST_RESULT_TABLE(3, :) = [RESULT_TABLE(best_kmeans_idx, 12), RESULT_TABLE(best_kmeans_idx, 13), RESULT_TABLE(best_kmeans_idx, 11)];
+BEST_RESULT_TABLE(4, :) = [RESULT_TABLE(best_kmeans_idx, 17), RESULT_TABLE(best_kmeans_idx, 18), RESULT_TABLE(best_kmeans_idx, 16)];
 
-%% compare the patterns
-figure();
-set(gca,'FontSize',16);
-hold on;
-subplot(151), imagesc(THETA_ORIGINAL);
-axis('off');
-title('Real Correlations', 'FontSize', 21)
-subplot(152), imagesc(THETA1);
-axis('off');
-title('Double K-means', 'FontSize', 21)
-subplot(153), imagesc(THETA2);
-axis('off');
-title('Double NMF', 'FontSize', 21)
-subplot(154), imagesc(THETA3);
-axis('off');
-title('Rogers'' model', 'FontSize', 21)
-subplot(155), imagesc(THETA4);
-axis('off');
-title('Coupled NMF', 'FontSize', 21)
-hold off;
-
-%% output the performance
-% choose different measurement
-mean_err = mean(RESULT_TABLE);
-std_err = std(RESULT_TABLE);
-
-% mean_err = median(RESULT_TABLE);
-% std_err = max(RESULT_TABLE) - mean_err;
-
-fprintf('\n%d run\n', REPEAT_NUM);
-[mrna_consistency,~] = CalcuConsistency(IDX_MATRIX_MRNA(:,:,1));
-[protein_consistency,~] = CalcuConsistency(IDX_MATRIX_PROTEIN(:,:,1));
-fprintf('%-20s , %.1f%% + %.1f, %.1f%% + %.1f, %.2f + %.2f, %.2f + %.2f, %.2f, %.2f, %.2f + %.2f\n' ...
-    , 'Double K-means', mean_err(2)*100, std_err(2)*100 ...
-    , mean_err(3)*100, std_err(3)*100 ...
-    , mean_err(4), std_err(4) ...
-    , mean_err(5), std_err(5) ...
-    , mrna_consistency, protein_consistency ...
-    , mean_err(1), std_err(1));
-[mrna_consistency,~] = CalcuConsistency(IDX_MATRIX_MRNA(:,:,2));
-[protein_consistency,~] = CalcuConsistency(IDX_MATRIX_PROTEIN(:,:,2));
-fprintf('%-20s , %.1f%% + %.1f, %.1f%% + %.1f, %.2f + %.2f, %.2f + %.2f, %.2f, %.2f, %.2f + %.2f\n' ...
-    , 'Double NMF', mean_err(7)*100, std_err(7)*100 ...
-    , mean_err(8)*100, std_err(8)*100 ...
-    , mean_err(9), std_err(9) ...
-    , mean_err(10), std_err(10) ...
-    , mrna_consistency, protein_consistency ...
-    , mean_err(6), std_err(6));
-[mrna_consistency,~] = CalcuConsistency(IDX_MATRIX_MRNA(:,:,3));
-[protein_consistency,~] = CalcuConsistency(IDX_MATRIX_PROTEIN(:,:,3));
-fprintf('%-20s , %.1f%% + %.1f, %.1f%% + %.1f, %.2f + %.2f, %.2f + %.2f, %.2f, %.2f, %.2f + %.2f\n' ...
-    , 'Rogers'' Model', mean_err(12)*100, std_err(12)*100 ...
-    , mean_err(13)*100, std_err(13)*100 ...
-    , mean_err(14), std_err(14) ...
-    , mean_err(15), std_err(15) ...
-    , mrna_consistency, protein_consistency ...
-    , mean_err(11), std_err(11));
-[mrna_consistency,~] = CalcuConsistency(IDX_MATRIX_MRNA(:,:,4));
-[protein_consistency,~] = CalcuConsistency(IDX_MATRIX_PROTEIN(:,:,4));
-fprintf('%-20s , %.1f%% + %.1f, %.1f%% + %.1f, %.2f + %.2f, %.2f + %.2f, %.2f, %.2f, %.2f + %.2f\n' ...
-    , 'Coupled NMF', mean_err(17)*100, std_err(17)*100 ...
-    , mean_err(18)*100, std_err(18)*100 ...
-    , mean_err(19), std_err(19) ...
-    , mean_err(20), std_err(20) ...      
-    , mrna_consistency, protein_consistency ...
-    , mean_err(16), std_err(16));
-%%
-fprintf('\nTheir internal best solution:\n');
-fprintf('%-20s , %.1f%%, %.1f%%, %.2f\n', ...
-    'Double K-means', RESULT_TABLE(best_kmeans_idx, 2)*100, RESULT_TABLE(best_kmeans_idx, 3)*100, RESULT_TABLE(best_kmeans_idx, 1));
-fprintf('%-20s , %.1f%%, %.1f%%, %.2f\n', ...
-    'Double NMF', RESULT_TABLE(best_dnmf_idx, 7)*100, RESULT_TABLE(best_dnmf_idx, 8)*100, RESULT_TABLE(best_dnmf_idx, 6));
-fprintf('%-20s , %.1f%%, %.1f%%, %.2f\n', ...
-    'Rogers'' Model', RESULT_TABLE(best_rogers_idx, 12)*100, RESULT_TABLE(best_rogers_idx, 13)*100, RESULT_TABLE(best_rogers_idx, 11));
-fprintf('%-20s , %.1f%%, %.1f%%, %.2f\n', ...
-    'Coupled NMF', RESULT_TABLE(best_cnmf_idx, 17)*100, RESULT_TABLE(best_cnmf_idx, 18)*100, RESULT_TABLE(best_cnmf_idx, 16));
-       
-    
-
-
+end
 
 
 

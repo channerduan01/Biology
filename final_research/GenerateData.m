@@ -1,25 +1,13 @@
 %%
-% Using the method from paper:
-% Sparse Nonnegative Matrix Factorization for Clustering
+% Data Generator
 %
 
-close all
-clear
-clc
-
-addpath(genpath('/Users/channerduan/Desktop/Final_Project/codes'));
-
-K = 5;
-J = K;
-
-T = 10;
-N = 1000;
-
+function [MRNA_ORIGINAL, PROTEIN_ORIGINAL, THETA_ORIGINAL, H1_ORIGINAL, H2_ORIGINAL] ...
+    = GenerateData(K, J, T, N)
 VALUE_RANGE_D = 1:0.1:2;
 VALUE_VARIANCE = 0.3;
 
-
-%%
+% Init distributions
 while true
     AVG_K_ = zeros(T, K);
     COV_K_ = zeros(T, T, K);
@@ -62,9 +50,7 @@ while true
         break;
     end
 end
-
-    
-
+% generate original data
 MRNA_ORIGINAL = zeros(T, N);
 PROTEIN_ORIGINAL = zeros(T, N);
 J_RANGE = randperm(K);
@@ -74,11 +60,8 @@ for k = 1:K
     MRNA_ORIGINAL(:, range(K,N,k)) = mvnrnd(AVG_K_(:,k)', COV_K_(:,:,k), length(range(K,N,k)))';
     PROTEIN_ORIGINAL(:, range(K,N,k)) = mvnrnd(AVG_J_(:,k_)', COV_J_(:,:,k_), length(range(K,N,k)))';    
 end
-
-
 MRNA_ORIGINAL(MRNA_ORIGINAL<0) = 0;
 PROTEIN_ORIGINAL(PROTEIN_ORIGINAL<0) = 0;
-
 % Calculate relationship between MRNA_ORIGINAL and PROTEIN_ORIGINAL
 H1_ORIGINAL = zeros(K, N);
 H2_ORIGINAL = zeros(J, N);
@@ -90,66 +73,11 @@ for i = 1:N
     H1_ORIGINAL(:, i) = H1_ORIGINAL(:, i)/sum(H1_ORIGINAL(:, i));
     H2_ORIGINAL(:, i) = H2_ORIGINAL(:, i)/sum(H2_ORIGINAL(:, i));
 end
-
 THETA_ORIGINAL = CalcuTheta(H1_ORIGINAL, H2_ORIGINAL, K, J, N);
-
 figure();
 imagesc(THETA_ORIGINAL);
 title('Real THETA');
-
-
-% permuted !!! important!!! ===================
-% ii = randperm(N);
-% PROTEIN_ORIGINAL = PROTEIN_ORIGINAL(:,ii);
-% =============================================
-
-%%
-MRNA = MRNA_ORIGINAL;
-PROTEIN = PROTEIN_ORIGINAL;
-
-% Add noise                ==============
-amplitude = 1;
-NOISE_1 = randn(size(MRNA))*amplitude;
-NOISE_2 = randn(size(PROTEIN))*amplitude;
-MRNA(MRNA>0) = MRNA(MRNA>0) + NOISE_1(MRNA>0);
-PROTEIN(PROTEIN>0) = PROTEIN(PROTEIN>0) + NOISE_2(PROTEIN>0);
-
-% MRNA = MRNA + rand(size(MRNA))*1;
-% PROTEIN = PROTEIN + rand(size(PROTEIN))*1;
-% =======================================
-
-
-% Normalize original data
-MRNA = normalize(MRNA);
-PROTEIN = normalize(PROTEIN);
-
-% MRNA = normalize_v2(MRNA);
-% PROTEIN = normalize_v2(PROTEIN);
-% PROTEIN_ORIGINAL = PROTEIN;
-% MRNA(MRNA<0) = 0;
-% PROTEIN(PROTEIN<0) = 0;
-% 
-% MRNA = pow2(MRNA);
-% PROTEIN = pow2(PROTEIN);
-% MRNA(MRNA>0.5) = 0;
-% PROTEIN(PROTEIN>0.5) = 0;
-
-%% visualize the distribution
-[~,idx_] = max(H1_ORIGINAL);
-drawCheckDataDistribution(MRNA',idx_,'MRNA distribution');
-
-
-
-
-
-%%
-C_ = CalcuCovariance(MRNA');
-sum(sum(abs(C_)))
-
-
-
-
-
+end
 
 
 

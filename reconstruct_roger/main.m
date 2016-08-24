@@ -11,7 +11,7 @@ P1 = data{2};
 MRNA = normalize(MRNA)';
 PROTEIN = normalize(P1(:,2:7))';
 PROTEIN_ORIGINAL = normalize(P1)';
-PROTEIN = PROTEIN_ORIGINAL; % improve
+PROTEIN = PROTEIN_ORIGINAL; % improve trick
 [T1,N] = size(MRNA);
 [T2,~] = size(PROTEIN);
 
@@ -35,65 +35,65 @@ J = 19;
 % end
 % disp(['k-means cost:',num2str(cost(PROTEIN,W,H))]);
 
-%% K-mean
-REPEAPT = 2;
-IDX_MATRIX_MRNA = zeros(REPEAPT, N);
-IDX_MATRIX_PROTEIN = zeros(REPEAPT, N);
-for index_ = 1:REPEAPT
-    repeat = 1;
-    opts = statset('Display','final');
-    [idx1,~] = kmeans(MRNA',K,'Replicates',repeat,'Options',opts,'Start','sample');
-    IDX_MATRIX_MRNA(index_,:) = idx1;
-    H1 = zeros(K,length(idx1));
-    for i = 1:length(idx1)
-        H1(idx1(i),i) = 1;
-    end
-    [idx2,~] = kmeans(PROTEIN',J,'Replicates',repeat,'Options',opts,'Start','sample');
-    IDX_MATRIX_PROTEIN(index_,:) = idx2;
-    H2 = zeros(J,length(idx2));
-    for i = 1:length(idx2)
-        H2(idx2(i),i) = 1;
-    end
-    THETA_KMEAN = CalcuTheta(H1, H2, K, J, N);
-end
-[mrna_consistency,mrna_C] = CalcuConsistency(IDX_MATRIX_MRNA);
-[protein_consistency,protein_C] = CalcuConsistency(IDX_MATRIX_PROTEIN);
-fprintf('mrna consistency: %f, protein consistency: %f\n', mrna_consistency, protein_consistency);
-
-%% Single Analysis
-SELETION_THRESHOLD = 0.5;
-[mrna_clusters, protein_clusters] = CalcuClusterExtent(K, J, N, H1, H2, SELETION_THRESHOLD);
-OutputClustersNM(K, J, mrna_clusters, protein_clusters, true, names);
-ANALYSIS_PROTEIN_CLUSTER_IDX = 10;
-ClusterAnalysis(ANALYSIS_PROTEIN_CLUSTER_IDX, H1, protein_clusters, MRNA, PROTEIN_ORIGINAL, names);
+% %% K-mean
+% REPEAPT = 2;
+% IDX_MATRIX_MRNA = zeros(REPEAPT, N);
+% IDX_MATRIX_PROTEIN = zeros(REPEAPT, N);
+% for index_ = 1:REPEAPT
+%     repeat = 1;
+%     opts = statset('Display','final');
+%     [idx1,~] = kmeans(MRNA',K,'Replicates',repeat,'Options',opts,'Start','sample');
+%     IDX_MATRIX_MRNA(index_,:) = idx1;
+%     H1 = zeros(K,length(idx1));
+%     for i = 1:length(idx1)
+%         H1(idx1(i),i) = 1;
+%     end
+%     [idx2,~] = kmeans(PROTEIN',J,'Replicates',repeat,'Options',opts,'Start','sample');
+%     IDX_MATRIX_PROTEIN(index_,:) = idx2;
+%     H2 = zeros(J,length(idx2));
+%     for i = 1:length(idx2)
+%         H2(idx2(i),i) = 1;
+%     end
+%     THETA_KMEAN = CalcuTheta(H1, H2, K, J, N);
+% end
+% [mrna_consistency,mrna_C] = CalcuConsistency(IDX_MATRIX_MRNA);
+% [protein_consistency,protein_C] = CalcuConsistency(IDX_MATRIX_PROTEIN);
+% fprintf('mrna consistency: %f, protein consistency: %f\n', mrna_consistency, protein_consistency);
+% 
+% %% Single Analysis
+% SELETION_THRESHOLD = 0.5;
+% [mrna_clusters, protein_clusters] = CalcuClusterExtent(K, J, N, H1, H2, SELETION_THRESHOLD);
+% OutputClustersNM(K, J, mrna_clusters, protein_clusters, true, names);
+% ANALYSIS_PROTEIN_CLUSTER_IDX = 10;
+% ClusterAnalysis(ANALYSIS_PROTEIN_CLUSTER_IDX, H1, protein_clusters, MRNA, PROTEIN_ORIGINAL, names);
 
 
 %% Roger's Model
 MAX_ITER = 100;
 patience = 1;
-REPEAPT = 2;
+REPEAPT = 100;
 RESULT = cell(REPEAPT,1);
 index = 0;
 error_result_num = 0;
 while true
-    % -------- permuted Proteins, keep annotation
-    %     ii = randperm(N);
-    %     MRNA(:,1:N) = MRNA(:,ii);
-    %     PROTEIN(:,1:N) = PROTEIN(:,ii);
-    % --------
+%     -------- permuted Proteins, keep annotation
+        ii = randperm(N);
+%         MRNA(:,1:N) = MRNA(:,ii);
+        PROTEIN(:,1:N) = PROTEIN(:,ii);
+%     --------
     index = index + 1;
     if index > REPEAPT, break;end
     fprintf('\n\nstart round %d >>>>>>', index);
-%     try
+    try
         [Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,HIS] = ...
             MyCoupleClustering(MRNA, PROTEIN, K, J, MAX_ITER, patience, true);
         [THETA_reverse, entropy_j_k, entropy_k_j] = EntropyCalculate(K, J, PI_K, THETA);
         [R_J, Q_J] = CalcuSubclusterBelonging(MRNA, AVG_K, VARIANCE_K, PROTEIN, AVG_J, VARIANCE_J, PI_K, THETA_reverse, R, K, J, N, T1, T2);
         low_bound = CalcuLowbound(Q,R,PI_K,AVG_K,VARIANCE_K,THETA,AVG_J,VARIANCE_J,MRNA,PROTEIN,K,J,T1,T2,N);
-%     catch ME
-%         low_bound = NaN;
-%         fprintf('error!!!\n')
-%     end
+    catch ME
+        low_bound = NaN;
+        fprintf('error!!!\n')
+    end
     if isnan(low_bound) || low_bound == -Inf || low_bound == Inf
         error_result_num = error_result_num + 1;
         index = index - 1;

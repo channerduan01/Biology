@@ -16,7 +16,7 @@ N = 1000;
 gap_requirement = 0.07;
 
 while true
-    AVG_K_ = rand(T, K)+2;
+    AVG_K_ = rand(T, K);
     pass_ = true;
     for t = 2:T
         for tt = 1:t-1
@@ -30,7 +30,7 @@ while true
     if pass_, break; end
 end
 while true
-    AVG_J_ = rand(T, J)+2;
+    AVG_J_ = rand(T, J);
     t = 1;
     pass_ = true;
     for t = 2:T
@@ -102,8 +102,8 @@ for k = 1:K
 end
 
 % for nonnegative
-MRNA(MRNA<0) = 0;
-PROTEIN(PROTEIN<0) = 0;
+% MRNA(MRNA<0) = 0;
+% PROTEIN(PROTEIN<0) = 0;
 
 % idx_last = 1;
 % for k = 1:K
@@ -139,6 +139,7 @@ figure();
 imagesc(THETA_ORIGINAL);
 title('Real THETA');
 
+
 % Add noise =============================
 % MRNA = MRNA + randn(size(MRNA))*1;
 % PROTEIN = PROTEIN + randn(size(PROTEIN))*0.1;
@@ -146,20 +147,19 @@ title('Real THETA');
 % MRNA = MRNA + randn(size(MRNA))*0.1;
 % PROTEIN = PROTEIN + randn(size(PROTEIN))*1;
 
-% MRNA = MRNA + randn(size(MRNA))*0.1;
-% PROTEIN = PROTEIN + randn(size(PROTEIN))*0.1;
+% MRNA = MRNA + randn(size(MRNA))*1;
+% PROTEIN = PROTEIN + randn(size(PROTEIN))*1;
 % =======================================
 
 
 % Normalize original data
 % MRNA = normalize(MRNA);
 % PROTEIN = normalize(PROTEIN);
-% PROTEIN_ORIGINAL = PROTEIN;
 
+
+% PROTEIN_ORIGINAL = PROTEIN;
 % MRNA = abs(MRNA);
 % PROTEIN = abs(PROTEIN);
-
-
 
 
 
