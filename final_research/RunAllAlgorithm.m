@@ -121,6 +121,9 @@ end
 THETA2 = RESULT_DNMF{best_dnmf_idx}.theta;
 
 % coupled Rogers
+%----- for test
+best_rogers_idx = 1;
+%-----
 [RESULT_, best_result, error_result_num] = ...
     MyCoupleClusteringRepeat(MRNA, PROTEIN, K, J, 100, thresholdRogers, bSHOW, REPEAT_NUM);
 for repeat_time = 1:REPEAT_NUM
@@ -152,6 +155,7 @@ for repeat_time = 1:REPEAT_NUM
         break;
     end
 end
+
 
 % coupled NMF
 RESULT_CNMF = cell(REPEAT_NUM,1);
@@ -220,9 +224,9 @@ THETA4 = RESULT_CNMF{best_cnmf_idx}.theta;
 
 
 BEST_RESULT_TABLE(1, :) = [RESULT_TABLE(best_kmeans_idx, 2), RESULT_TABLE(best_kmeans_idx, 3), RESULT_TABLE(best_kmeans_idx, 1)];
-BEST_RESULT_TABLE(2, :) = [RESULT_TABLE(best_kmeans_idx, 7), RESULT_TABLE(best_kmeans_idx, 8), RESULT_TABLE(best_kmeans_idx, 6)];
-BEST_RESULT_TABLE(3, :) = [RESULT_TABLE(best_kmeans_idx, 12), RESULT_TABLE(best_kmeans_idx, 13), RESULT_TABLE(best_kmeans_idx, 11)];
-BEST_RESULT_TABLE(4, :) = [RESULT_TABLE(best_kmeans_idx, 17), RESULT_TABLE(best_kmeans_idx, 18), RESULT_TABLE(best_kmeans_idx, 16)];
+BEST_RESULT_TABLE(2, :) = [RESULT_TABLE(best_dnmf_idx, 7), RESULT_TABLE(best_dnmf_idx, 8), RESULT_TABLE(best_dnmf_idx, 6)];
+BEST_RESULT_TABLE(3, :) = [RESULT_TABLE(best_rogers_idx, 12), RESULT_TABLE(best_rogers_idx, 13), RESULT_TABLE(best_rogers_idx, 11)];
+BEST_RESULT_TABLE(4, :) = [RESULT_TABLE(best_cnmf_idx, 17), RESULT_TABLE(best_cnmf_idx, 18), RESULT_TABLE(best_cnmf_idx, 16)];
 
 end
 

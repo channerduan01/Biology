@@ -57,14 +57,25 @@ result_ = reshape(mean(HUGE_TALBE), [20,length(set_of_amplitude)]);
 
 figure;
 hold on;
-plot(result_(2,:));
-plot(result_(7,:));
-plot(result_(12,:));
-plot(result_(17,:));
+plot(set_of_amplitude, result_(2,:)*100);
+plot(set_of_amplitude, result_(7,:)*100);
+plot(set_of_amplitude, result_(12,:)*100);
+plot(set_of_amplitude, result_(17,:)*100);
 set(gca,'FontSize',20);
 legend('Double K-means', 'Double NMF', 'Rogers'' Model', 'Coupled NMF');
 hold off;
+%% RESULT
+result_ = reshape(mean(HUGE_TALBE), [20,length(set_of_amplitude)]);
 
+figure;
+hold on;
+plot(set_of_amplitude, result_(3,:)*100);
+plot(set_of_amplitude, result_(8,:)*100);
+plot(set_of_amplitude, result_(13,:)*100);
+plot(set_of_amplitude, result_(18,:)*100);
+set(gca,'FontSize',20);
+legend('Double K-means', 'Double NMF', 'Rogers'' Model', 'Coupled NMF');
+hold off;
 %% Best RESULT
 best_result_ = reshape(BEST_HUGE_TALBE(:,1,:), [4,length(set_of_amplitude)]);
 

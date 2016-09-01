@@ -7,11 +7,13 @@ function [MRNA_ORIGINAL, PROTEIN_ORIGINAL, H1_ORIGINAL, H2_ORIGINAL, AVG_K_, COV
 VALUE_RANGE_D = 1:0.1:2;
 VALUE_VARIANCE = 0.3;
 
+OVERLAP_COEFF = 1;
+
 % Init distributions
 while true
     AVG_K_ = zeros(T, K);
     COV_K_ = zeros(T, T, K);
-    for extra = 1:1
+    for extra = 1:OVERLAP_COEFF
         for i = 1:T
             k = floor(rand()*K)+1;
             AVG_K_(i,k) = VALUE_RANGE_D(floor(rand()*length(VALUE_RANGE_D))+1);
@@ -32,7 +34,7 @@ end
 while true
     AVG_J_ = zeros(T, J);
     COV_J_ = zeros(T, T, J);    
-    for extra = 1:1
+    for extra = 1:OVERLAP_COEFF
         for i = 1:T
             j = floor(rand()*J)+1;
             AVG_J_(i,j) = VALUE_RANGE_D(floor(rand()*length(VALUE_RANGE_D))+1);
@@ -64,8 +66,18 @@ for k = 1:K
     MRNA_ORIGINAL(:, range(K,N,k)) = mvnrnd(AVG_K_(:,k)', COV_K_(:,:,k), length(range(K,N,k)))';
     PROTEIN_ORIGINAL(:, range(K,N,k)) = mvnrnd(AVG_J_(:,k_)', COV_J_(:,:,k_), length(range(K,N,k)))';    
 end
-MRNA_ORIGINAL(MRNA_ORIGINAL<0) = 0;
-PROTEIN_ORIGINAL(PROTEIN_ORIGINAL<0) = 0;
+ii = randperm(N);
+MRNA_ORIGINAL = MRNA_ORIGINAL(:,ii);
+PROTEIN_ORIGINAL = PROTEIN_ORIGINAL(:,ii);
+H1_ORIGINAL = H1_ORIGINAL(:,ii);
+H2_ORIGINAL = H2_ORIGINAL(:,ii);
+
+% MRNA_ORIGINAL(MRNA_ORIGINAL<0) = 0;
+% PROTEIN_ORIGINAL(PROTEIN_ORIGINAL<0) = 0;
+
+% % Normalize original data
+% MRNA_ORIGINAL = normalize(MRNA_ORIGINAL);
+% PROTEIN_ORIGINAL = normalize(PROTEIN_ORIGINAL);
 end
 
 

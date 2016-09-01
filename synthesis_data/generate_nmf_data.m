@@ -67,36 +67,40 @@ end
 
 MRNA_ORIGINAL = zeros(T, N);
 PROTEIN_ORIGINAL = zeros(T, N);
-J_RANGE = randperm(K);
+H1_ORIGINAL = zeros(K, N);
+H2_ORIGINAL = zeros(J, N);
 range = @(K,N,k) floor(N/K*(k-1))+1:floor(N/K*k);
+J_RANGE = randperm(K);
 for k = 1:K
     k_ = J_RANGE(k);
+    H1_ORIGINAL(k, range(K,N,k)) = 1;
+    H2_ORIGINAL(k_, range(K,N,k)) = 1;
     MRNA_ORIGINAL(:, range(K,N,k)) = mvnrnd(AVG_K_(:,k)', COV_K_(:,:,k), length(range(K,N,k)))';
     PROTEIN_ORIGINAL(:, range(K,N,k)) = mvnrnd(AVG_J_(:,k_)', COV_J_(:,:,k_), length(range(K,N,k)))';    
 end
 
+ii = randperm(N);
+MRNA_ORIGINAL = MRNA_ORIGINAL(:,ii);
+PROTEIN_ORIGINAL = PROTEIN_ORIGINAL(:,ii);
+H1_ORIGINAL = H1_ORIGINAL(:,ii);
+H2_ORIGINAL = H2_ORIGINAL(:,ii);
 
 MRNA_ORIGINAL(MRNA_ORIGINAL<0) = 0;
 PROTEIN_ORIGINAL(PROTEIN_ORIGINAL<0) = 0;
 
 % Calculate relationship between MRNA_ORIGINAL and PROTEIN_ORIGINAL
-H1_ORIGINAL = zeros(K, N);
-H2_ORIGINAL = zeros(J, N);
-for k = 1:K
-    H1_ORIGINAL(k, :) = MyMvnpdf(MRNA_ORIGINAL',AVG_K_(:,k)', COV_K_(:,:,k));
-    H2_ORIGINAL(k, :) = MyMvnpdf(PROTEIN_ORIGINAL',AVG_J_(:,k)', COV_J_(:,:,k));
-end
-for i = 1:N
-    H1_ORIGINAL(:, i) = H1_ORIGINAL(:, i)/sum(H1_ORIGINAL(:, i));
-    H2_ORIGINAL(:, i) = H2_ORIGINAL(:, i)/sum(H2_ORIGINAL(:, i));
-end
-
-THETA_ORIGINAL = CalcuTheta(H1_ORIGINAL, H2_ORIGINAL, K, J, N);
-
-figure();
-imagesc(THETA_ORIGINAL);
-title('Real THETA');
-
+THETA_ORIGINAL = CreateThetaOriginal(K, J, T, N, MRNA_ORIGINAL, PROTEIN_ORIGINAL, AVG_K_, COV_K_, AVG_J_, COV_J_, true);
+% H1_ORIGINAL = zeros(K, N);
+% H2_ORIGINAL = zeros(J, N);
+% for k = 1:K
+%     H1_ORIGINAL(k, :) = MyMvnpdf(MRNA_ORIGINAL',AVG_K_(:,k)', COV_K_(:,:,k));
+%     H2_ORIGINAL(k, :) = MyMvnpdf(PROTEIN_ORIGINAL',AVG_J_(:,k)', COV_J_(:,:,k));
+% end
+% for i = 1:N
+%     H1_ORIGINAL(:, i) = H1_ORIGINAL(:, i)/sum(H1_ORIGINAL(:, i));
+%     H2_ORIGINAL(:, i) = H2_ORIGINAL(:, i)/sum(H2_ORIGINAL(:, i));
+% end
+% THETA_ORIGINAL = CalcuTheta(H1_ORIGINAL, H2_ORIGINAL, K, J, N);
 
 % permuted !!! important!!! ===================
 % ii = randperm(N);
@@ -107,15 +111,19 @@ title('Real THETA');
 MRNA = MRNA_ORIGINAL;
 PROTEIN = PROTEIN_ORIGINAL;
 
-% Add noise                ==============
-amplitude = 1;
-NOISE_1 = randn(size(MRNA))*amplitude;
-NOISE_2 = randn(size(PROTEIN))*amplitude;
-MRNA(MRNA>0) = MRNA(MRNA>0) + NOISE_1(MRNA>0);
-PROTEIN(PROTEIN>0) = PROTEIN(PROTEIN>0) + NOISE_2(PROTEIN>0);
+MRNA = normalize(MRNA);
+PROTEIN = normalize(PROTEIN);
 
-% MRNA = MRNA + rand(size(MRNA))*1;
-% PROTEIN = PROTEIN + rand(size(PROTEIN))*1;
+% Add noise                ==============
+% amplitude = 1;
+% NOISE_1 = randn(size(MRNA))*amplitude;
+% NOISE_2 = randn(size(PROTEIN))*amplitude;
+% MRNA(MRNA_ORIGINAL>0) = MRNA(MRNA_ORIGINAL>0) + NOISE_1(MRNA_ORIGINAL>0);
+% PROTEIN(MRNA_ORIGINAL>0) = PROTEIN(MRNA_ORIGINAL>0) + NOISE_2(MRNA_ORIGINAL>0);
+
+amplitude = 0;
+MRNA = MRNA + randn(size(MRNA))*amplitude;
+PROTEIN = PROTEIN + randn(size(PROTEIN))*amplitude;
 % =======================================
 
 
@@ -134,17 +142,13 @@ PROTEIN = normalize(PROTEIN);
 % MRNA(MRNA>0.5) = 0;
 % PROTEIN(PROTEIN>0.5) = 0;
 
-%% visualize the distribution
-[~,idx_] = max(H1_ORIGINAL);
-drawCheckDataDistribution(MRNA',idx_,'MRNA distribution');
-
-
-
-
-
-%%
-C_ = CalcuCovariance(MRNA');
-sum(sum(abs(C_)))
+% %% visualize the distribution
+% [~,idx_] = max(H1_ORIGINAL);
+% drawCheckDataDistribution(MRNA',idx_,'MRNA distribution');
+% 
+% %%
+% C_ = CalcuCovariance(MRNA');
+% sum(sum(abs(C_)))
 
 
 

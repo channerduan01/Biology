@@ -72,14 +72,14 @@ while true
     index_ = 3;
 %     [W1,H1,W2,H2,~,HIS,last_iter] = ...
 %         CoNMF_v2_separate(MRNA, PROTEIN, K, J ...
-%         , 'W_COEF', w_coef, 'H_COEF', h_coef, 'T_COEF', t_coef ...
-%         , 'VERBOSE', 0, 'METHOD', method ...
+%         , 'W_COEF', 0.1, 'H_COEF', 0.1, 'T_COEF', 0 ...
+%         , 'VERBOSE', 0, 'METHOD', 'SBP' ...
 %         , 'MIN_ITER', min_iter, 'MAX_ITER', max_iter ...
 %         );
     [W1,H1,W2,H2,~,HIS,last_iter] = ...
         CoNMF_v2_separate(MRNA, PROTEIN, K, J ...
-        , 'W_COEF', 0.2, 'H_COEF', 0.2 ...
-        , 'VERBOSE', 0, 'METHOD', 'BP', 'PATIENCE', 0.1 ...
+        , 'W_COEF', 0.5, 'H_COEF', 0.5 ...
+        , 'VERBOSE', 0, 'METHOD', 'SBP', 'PATIENCE', 0.1 ...
         , 'MIN_ITER', min_iter, 'MAX_ITER', max_iter ...
         );    
     total_cost = sum(HIS(last_iter+1,1:2));
@@ -211,24 +211,25 @@ THETA4 = RESULT_CNMF{best_cnmf_idx}.theta;
 %         CoupledKmeans(MRNA_, PROTEIN_, K, J, 0.9, 30);
 
 %% compare the patterns
+IDEAL_THETA_ORIGINAL = CalcuTheta(H1_ORIGINAL, H2_ORIGINAL, K, J, N);
 figure();
 set(gca,'FontSize',16);
 hold on;
-subplot(151), imagesc(THETA_ORIGINAL);
+subplot(151), imagesc(IDEAL_THETA_ORIGINAL);
 axis('off');
-title('Real Correlations', 'FontSize', 21)
+title('Real Correlations', 'FontSize', 19)
 subplot(152), imagesc(THETA1);
 axis('off');
-title('Double K-means', 'FontSize', 21)
+title('Double K-means', 'FontSize', 19)
 subplot(153), imagesc(THETA2);
 axis('off');
-title('Double NMF', 'FontSize', 21)
+title('Double NMF', 'FontSize', 19)
 subplot(154), imagesc(THETA3);
 axis('off');
-title('Rogers'' model', 'FontSize', 21)
+title('Rogers'' model', 'FontSize', 19)
 subplot(155), imagesc(THETA4);
 axis('off');
-title('Coupled NMF', 'FontSize', 21)
+title('Coupled NMF', 'FontSize', 19)
 hold off;
 
 %% output the performance

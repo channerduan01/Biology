@@ -26,7 +26,7 @@ while true
     end
     if isnan(low_bound) || low_bound == -Inf || low_bound == Inf
         error_result_num = error_result_num + 1;
-        if error_result_num > 10*REPEAT
+        if error_result_num > 20*REPEAT
             throw(MException('MyCoupleClusteringRepeat:failed','Too many errors!!!'));
         end
         index = index - 1;
